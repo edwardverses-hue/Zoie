@@ -9,7 +9,7 @@
     links.forEach((a) => a.classList.toggle("current", a.dataset.view === view));
     hint.textContent = view === "birthday" ? "" : "drag anywhere";
     if (!first) hint.classList.remove("gone");
-    if (view === "birthday" && window.BdayReset) window.BdayReset();
+    if (window.Keychain) window.Keychain.reset();
     first = false;
   }
   addEventListener("hashchange", show);

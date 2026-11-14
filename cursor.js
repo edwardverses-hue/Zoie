@@ -46,7 +46,7 @@
     if (t && t.closest("header a")) return setState("link");
     if (body.contains("birthday")) {
       return window.Keychain && window.Keychain.hits && window.Keychain.hits(px, py)
-        ? setState("label", "grab") : setState("heart");
+        ? setState("link") : setState("heart");
     }
     if (document.getElementById("stage").classList.contains("dragging")) return setState("heart");
     // photos have pointer-events on the slot, so hit-test them directly

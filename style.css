@@ -279,70 +279,11 @@ body.viewing #hint { opacity: 0; }
 header > * { white-space: nowrap; }
 @media (max-width: 380px) { header { padding: 20px 14px 0; font-size: 21px; } }
 
-/* ---- birthday page: scroll, card slides over the keychain (after wildyriftian.com) ---- */
 header { z-index: 8; }
-#bday {
-  position: fixed; inset: 0;
-  overflow-y: auto; overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  z-index: 3;
-  display: none;
-}
-body.birthday #bday { display: block; }
-body.birthday #hint { opacity: 0; }
-.bday-hero { height: 100vh; height: 100svh; position: relative; }
-.bday-side, .bday-scroll {
-  position: absolute; margin: 0;
-  font: 30px/1 "Reenie Beanie", cursive; color: #fff;
-  text-shadow: 0 1px 3px rgba(20, 40, 90, 0.35);
-}
-.bday-side { top: 50%; transform: translateY(-50%); }
-.bday-side.left { left: 64px; } .bday-side.right { right: 64px; }
-.bday-scroll { bottom: 28px; left: 0; right: 0; text-align: center; line-height: 1.1; }
 
-.bday-card-wrap { padding: 0 40px 12vh; }
-.bday-card {
-  position: relative;
-  max-width: 1080px; margin: 0 auto;
-  background: #fbf9f4;
-  border: 1px dotted #7b8fb8;
-  box-shadow: 0 12px 40px rgba(20, 40, 90, 0.22);
-  color: #1d2a44;
-  padding: 18px 0 0;
-}
-.bday-card .dot { position: absolute; width: 7px; height: 7px; background: #1d2a44; border-radius: 50%; }
-.dot.tl { left: 10px; top: 10px; } .dot.tr { right: 10px; top: 10px; }
-.dot.bl { left: 10px; bottom: 10px; } .dot.br { right: 10px; bottom: 10px; }
-.card-tag { text-align: center; font: 13px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; margin: 0 0 6px; text-transform: uppercase; }
-.card-title {
-  font: 400 clamp(64px, 10vw, 128px)/0.92 "Reenie Beanie", cursive;
-  margin: 0; padding: 18px 40px 26px;
-  border-top: 1px dotted #7b8fb8; border-bottom: 1px dotted #7b8fb8;
-}
-.card-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: min(70vh, 620px); }
-.card-charm { position: relative; border-right: 1px dotted #7b8fb8; overflow: hidden; }
-.hanger { position: absolute; left: 50%; top: 6%; width: 0; height: 0; }
-.hanger img { position: absolute; max-width: none; -webkit-user-drag: none; filter: drop-shadow(0 8px 10px rgba(20, 40, 90, 0.2)); }
-.card-side { padding: 40px; display: flex; flex-direction: column; gap: 18px; justify-content: center; }
-.card-label { font: 72px/1 "Reenie Beanie", cursive; margin: 0 0 12px; min-height: 72px; color: #2f56c9; }
-.card-copy { font: 13px/1.7 ui-monospace, Menlo, monospace; text-transform: uppercase; margin: 0; max-width: 42ch; }
-.card-foot {
-  display: flex; justify-content: space-between;
-  border-top: 1px dotted #7b8fb8; padding: 14px 40px 18px;
-  font: 12px/1 ui-monospace, Menlo, monospace; text-transform: uppercase; letter-spacing: .06em;
-}
-@media (max-width: 720px) {
-  .bday-side { display: none; }
-  .bday-card-wrap { padding: 0 12px 8vh; }
-  .card-title { padding: 14px 20px 18px; }
-  .card-grid { grid-template-columns: 1fr; min-height: 0; }
-  .card-charm { height: 58vh; border-right: 0; border-bottom: 1px dotted #7b8fb8; }
-  .card-side { padding: 24px 20px 28px; }
-  .card-label { font-size: 56px; min-height: 56px; }
-  .card-foot { padding: 12px 20px 16px; font-size: 10px; }
-}
 
-header { transition: color 0.3s; }
-body.birthday.on-card header { color: #1d2a44; }
-body:not(.birthday) header { color: #fff; }
+/* hover strips over the keychain (one per charm), after wildyriftian.com desktop */
+#keychain { z-index: 3; }
+.kc-strips { position: absolute; left: 22.7%; top: 37.5%; width: 56.6%; height: 59.5%; display: flex; pointer-events: none; }
+body.birthday .kc-strips { pointer-events: auto; }
+.kc-strips span { flex: 1; touch-action: none; }
