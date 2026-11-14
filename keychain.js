@@ -13,9 +13,18 @@
 (() => {
   // EDIT: add a line per charm once its image is cut out (same 1200x1200 square).
   // amp: degrees at the top of the swing. Positive swings one way, negative the other.
+  // Back to front. amp: degrees at the top of the swing (their values: outer charms
+  // 3, middle 2; left side positive, right side negative).
+  // PLACEHOLDERS: 01-05 and the padlock are wildyriftian.com's own art, standing in
+  // until Edward's charms are cut out. Swap each file for the real one before sharing.
   const LAYERS = [
-    { src: "keychain/00ring.webp", top: true },
-    { src: "keychain/01photo.webp", amp: 3 },
+    { src: "keychain/05illustration.webp", amp: -3 },
+    { src: "keychain/04photoworks.webp", amp: -3 },
+    { src: "keychain/03editorial.webp", amp: 2 },
+    { src: "keychain/02branding.webp", amp: 3 },
+    { src: "keychain/01motion.webp", amp: 3 },
+    { src: "keychain/06photo.webp", amp: 2 },        // the acrylic photo keychain (real)
+    { src: "keychain/00padlock.webp", top: true },
   ];
 
   const PERIOD = 3600;        // ms
