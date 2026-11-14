@@ -29,28 +29,15 @@ html, body {
 
 .tile { position: absolute; left: 0; top: 0; }
 
-/* white border like the Figma frames */
+/* each photo is an SVG: hand-cut white backing + clipped photo (shapes from Figma) */
 .photo {
   position: absolute;
-  background: #fff;
-  padding: 3px;
-  box-shadow: 0 1px 2px rgba(20, 40, 90, 0.18);
-}
-.photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  overflow: visible;
+  filter: drop-shadow(0 1px 1.5px rgba(20, 40, 90, 0.18));
   pointer-events: none;
-  -webkit-user-drag: none;
 }
-/* shows until real photos are added */
-.photo.empty {
-  background: rgba(255, 255, 255, 0.35);
-  border: 3px solid #fff;
-  display: grid;
-  place-items: center;
-  color: #fff;
+.photo .num {
+  fill: #fff;
   font: 28px "Reenie Beanie", cursive;
 }
 

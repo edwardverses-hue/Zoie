@@ -1,42 +1,77 @@
 // Endless gallery: one tile (from Figma frame "3") repeated in every direction.
 (() => {
-  // Photo slots copied from Figma frame "3" (x, y, w, h), shifted so the tile starts at 0,0.
+  // Photo slots copied from Figma frame "3", including each hand-cut white backing.
+  // g: group x, y, w, h   b: backing x, y, rotation, path   p: photo x, y, w, h, mask path (or null)
   const RAW = [
-    [313, 401, 151, 212], [-266, 918, 128, 185], [-179, 1150, 186, 128], [495, 970, 163, 108],
-    [551, 414, 187, 142], [-226, 443, 249, 166], [-465, 726, 224, 155], [658, 1170, 259, 176],
-    [-629, 1026, 286, 193], [118, 1173, 375, 263], [-620, 402, 175, 278], [583, 625, 311, 209],
-    [811, 221, 375, 263], [1318, 505, 224, 155], [409, 181, 249, 166], [1201, 825, 175, 278],
-    [47, 221, 224, 155], [1045, 613, 186, 128], [1268, 167, 286, 193], [854, 902, 219, 148],
+    {"g":[313,401,151.26,212.42],"b":[0.73,0,-0.2,"M 0 0 L 150.53 0 L 150.53 211.9 L 0 211.9 Z"],"p":[2.12,0.46,148.42,207.78,null]},
+    {"g":[-266,918,127.7,185.18],"b":[0,0,0,"M 3.22 3.2 L 124.22 0 L 127.7 185.18 L 0 180.13 L 3.22 3.2 Z"],"p":[3.03,2.86,118.1,177.31,null]},
+    {"g":[-179,1150,186.41,128.24],"b":[0,0,0,"M 2.43 3.16 L 186.41 0 L 186.41 128.24 L 0 128.24 L 2.43 3.16 Z"],"p":[2.66,3.28,183.75,122.5,null]},
+    {"g":[495,970,162.78,108.44],"b":[0,0,0,"M 2.72 1.97 L 81.36 0 L 162.78 1.97 L 162.78 108.44 L 0 108.44 L 2.72 1.97 Z"],"p":[3.22,0,157.67,108.44,"M 2.64 1.97 L 78.81 0 L 157.67 1.97 L 157.67 108.44 L 0 108.44 L 2.64 1.97 Z"]},
+    {"g":[551,414,186.66,141.68],"b":[0,0,0,"M 0 0 L 123.56 3.06 L 186.66 1.76 L 186.66 141.68 L 2.04 141.68 L 0 0 Z"],"p":[0,0,184,138,"M 0 0 L 121.79 2.98 L 184 1.72 L 184 138 L 2.01 138 L 0 0 Z"]},
+    {"g":[-226,443,249.37,165.99],"b":[0,0,0,"M 0 0 L 193.92 3.33 L 247.29 7.82 L 249.37 165.99 L 0 162.47 L 0 80.23 L 0 0 Z"],"p":[0,0,249.37,163.97,"M 0 0 L 193.92 3.29 L 247.29 7.72 L 249.37 163.97 L 0 160.49 L 0 79.25 L 0 0 Z"]},
+    {"g":[-465,726,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
+    {"g":[658,1170,259.18,175.57],"b":[0,0,0,"M 2.05 2.02 L 259.18 0 L 259.18 175.57 L 0 175.57 L 2.05 2.02 Z"],"p":[2.1,0,257.07,172.29,null]},
+    {"g":[-629,1026,285.73,192.83],"b":[0,0,0,"M 0 0 L 285.73 0 L 285.73 192.83 L 3.28 188.12 L 0 0 Z"],"p":[3.25,0.16,282,189.5,null]},
+    {"g":[118,1173,374.5,263.43],"b":[0,0,0,"M 0 0 L 374.5 6.29 L 374.5 263.43 L 0 263.43 L 0 0 Z"],"p":[0,5.5,374.5,253.5,null]},
+    {"g":[-620,402,174.62,278.4],"b":[0,0,0,"M 4.58 0 L 78.25 0 L 169.8 0 L 174.62 278.4 L 4.58 278.4 L 0 193.69 L 4.58 0 Z"],"p":[0,0,171.34,275.09,"M 4.49 0 L 76.78 0 L 166.6 0 L 171.34 275.09 L 4.49 275.09 L 0 191.39 L 4.49 0 Z"]},
+    {"g":[583,625,310.6,209.48],"b":[0,0,0,"M 0 0 L 310.6 0 L 304.36 203.65 L 0 209.48 L 0 0 Z"],"p":[0,0,303.75,203.51,null]},
+    {"g":[811,221,374.5,263.43],"b":[0,0,0,"M 0 0 L 374.5 6.29 L 374.5 263.43 L 0 263.43 L 0 0 Z"],"p":[0,5.5,374.5,253.5,null]},
+    {"g":[1318,505,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
+    {"g":[409,181,249.37,165.99],"b":[0,0,0,"M 0 0 L 193.92 3.33 L 247.29 7.82 L 249.37 165.99 L 0 162.47 L 0 80.23 L 0 0 Z"],"p":[0,0,249.37,163.97,"M 0 0 L 193.92 3.29 L 247.29 7.72 L 249.37 163.97 L 0 160.49 L 0 79.25 L 0 0 Z"]},
+    {"g":[1201,825,174.62,278.4],"b":[0,0,0,"M 4.58 0 L 78.25 0 L 169.8 0 L 174.62 278.4 L 4.58 278.4 L 0 193.69 L 4.58 0 Z"],"p":[0,0,171.34,275.09,"M 4.49 0 L 76.78 0 L 166.6 0 L 171.34 275.09 L 4.49 275.09 L 0 191.39 L 4.49 0 Z"]},
+    {"g":[47,221,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
+    {"g":[1045,613,186.41,128.24],"b":[0,0,0,"M 2.43 3.16 L 186.41 0 L 186.41 128.24 L 0 128.24 L 2.43 3.16 Z"],"p":[2.66,3.28,183.75,122.5,null]},
+    {"g":[1268,167,285.73,192.83],"b":[0,0,0,"M 0 0 L 285.73 0 L 285.73 192.83 L 3.28 188.12 L 0 0 Z"],"p":[3.25,0.16,282,189.5,null]},
+    {"g":[854,902,218.75,148.5],"b":[0,0,0,"M 0 0 L 216.07 1.47 L 218.75 148.5 L 0 148.5 L 0 0 Z"],"p":[0,1.72,215.75,142.95,null]},
   ];
   const SHIFT_X = 687, SHIFT_Y = -102; // frame coords -> tile coords
   const TILE_W = 2300, TILE_H = 1400;  // repeat period (photos stay clear of the seams)
 
-  const SLOTS = RAW.map(([x, y, w, h]) => ({ x: x + SHIFT_X, y: y + SHIFT_Y, w, h }));
+  const SLOTS = RAW.map((s) => ({ ...s, x: s.g[0] + SHIFT_X, y: s.g[1] + SHIFT_Y }));
   const PHOTOS = window.PHOTOS || [];
 
   const stage = document.getElementById("stage");
   const plane = document.getElementById("plane");
   const hint = document.getElementById("hint");
 
+  const NS = "http://www.w3.org/2000/svg";
+  let clipId = 0;
+  const svgEl = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+
   function buildTile() {
     const tile = document.createElement("div");
     tile.className = "tile";
     SLOTS.forEach((s, i) => {
-      const el = document.createElement("div");
-      el.className = "photo";
-      Object.assign(el.style, { left: s.x + "px", top: s.y + "px", width: s.w + "px", height: s.h + "px" });
+      const [, , gw, gh] = s.g;
+      const [bx, by, brot, bpath] = s.b;
+      const [px, py, pw, ph, mask] = s.p;
+      const svg = svgEl("svg", { class: "photo", width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
+      svg.style.left = s.x + "px";
+      svg.style.top = s.y + "px";
+
+      // white backing, cut by hand in Figma (Figma rotation is counter-clockwise)
+      svg.appendChild(svgEl("path", { d: bpath, fill: "#fff", transform: `translate(${bx} ${by}) rotate(${-brot})` }));
+
+      // photo, clipped to its own (sometimes uneven) shape
+      const id = "c" + clipId++;
+      const clip = svgEl("clipPath", { id });
+      clip.appendChild(mask
+        ? svgEl("path", { d: mask, transform: `translate(${px} ${py})` })
+        : svgEl("rect", { x: px, y: py, width: pw, height: ph }));
+      svg.appendChild(clip);
+
       if (PHOTOS.length) {
-        const img = document.createElement("img");
-        img.src = PHOTOS[i % PHOTOS.length];
-        img.alt = "";
-        img.loading = "lazy";
-        img.decoding = "async";
-        el.appendChild(img);
+        svg.appendChild(svgEl("image", {
+          href: PHOTOS[i % PHOTOS.length], x: px, y: py, width: pw, height: ph,
+          preserveAspectRatio: "xMidYMid slice", "clip-path": `url(#${id})`,
+        }));
       } else {
-        el.classList.add("empty");
-        el.textContent = i + 1;
+        svg.appendChild(svgEl("rect", { x: px, y: py, width: pw, height: ph, fill: "#b9cdf5", "clip-path": `url(#${id})` }));
+        const t = svgEl("text", { x: px + pw / 2, y: py + ph / 2, "text-anchor": "middle", "dominant-baseline": "middle", class: "num" });
+        t.textContent = i + 1;
+        svg.appendChild(t);
       }
-      tile.appendChild(el);
+      tile.appendChild(svg);
     });
     return tile;
   }
