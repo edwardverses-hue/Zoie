@@ -138,7 +138,7 @@
   const K = () => window.Keychain;
 
   stage.addEventListener("pointerdown", (e) => {
-    stage.setPointerCapture(e.pointerId);
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     if (document.body.classList.contains("birthday")) {
       if (K() && K().grab(e.clientX, e.clientY)) mode = "charm";
       return; // no panning on the birthday page

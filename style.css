@@ -119,7 +119,8 @@ body.viewing #viewer figure { transform: rotate(-0.4deg) scale(1); }
   position: fixed;
   left: 50%;
   top: 52%;
-  width: min(76vh, 92vw);       /* same share of the screen as the reference */
+  /* same share of the screen as the reference, but always below the header */
+  width: min(76vh, 92vw, calc((100vh - 70px) * 1.05));
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -266,3 +267,14 @@ body.birthday #headline, body.viewing #headline { opacity: 0; }
 #headline span.in { visibility: visible; }
 #headline { transition: opacity 0.4s; }
 @media (max-width: 720px) { #headline span { font-size: 36px; } }
+
+/* short screens (phone held sideways): smaller header, keychain sits below it */
+@media (max-height: 500px) {
+  header { padding: 14px 24px 0; font-size: 26px; }
+  #keychain { top: calc(50% + 22px); }
+  #headline span { font-size: 30px; }
+  #hint { bottom: 10px; font-size: 22px; }
+}
+body.viewing #hint { opacity: 0; }
+header > * { white-space: nowrap; }
+@media (max-width: 380px) { header { padding: 20px 14px 0; font-size: 21px; } }
