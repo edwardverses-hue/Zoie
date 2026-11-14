@@ -27,7 +27,12 @@
   const SHIFT_X = 687, SHIFT_Y = -102; // frame coords -> tile coords
   const TILE_W = 2300, TILE_H = 1400;  // repeat period (photos stay clear of the seams)
 
-  const SLOTS = RAW.map((s) => ({ ...s, x: s.g[0] + SHIFT_X, y: s.g[1] + SHIFT_Y }));
+  // The Figma layout repeated 2x2 so 80 different photos fit before anything repeats.
+  const COPIES_X = 2, COPIES_Y = 2;
+  const SUPER_W = TILE_W * COPIES_X, SUPER_H = TILE_H * COPIES_Y;
+  const SLOTS = [];
+  for (let cy = 0; cy < COPIES_Y; cy++) for (let cx = 0; cx < COPIES_X; cx++)
+    RAW.forEach((s) => SLOTS.push({ ...s, x: s.g[0] + SHIFT_X + cx * TILE_W, y: s.g[1] + SHIFT_Y + cy * TILE_H }));
   const PHOTOS = window.PHOTOS || [];
 
   const stage = document.getElementById("stage");
@@ -42,11 +47,11 @@
   // A PHOTOS entry is either "photos/x.webp" or { thumb, full, loop, video }:
   //   thumb: small image for the gallery    full: big image for the expanded view
   //   loop: short muted clip for the gallery    video: full clip (with sound) for the expanded view
-  const media = (i) => {
-    const m = PHOTOS[i % PHOTOS.length];
-    return typeof m === "string" ? { thumb: m, full: m } : m;
-  };
-  window.GALLERY_MEDIA = PHOTOS.map((_, i) => media(i));
+  const SLOT_MAP = window.SLOT_MAP || [];
+  const mediaIndex = (slot) => (SLOT_MAP.length ? SLOT_MAP[slot % SLOT_MAP.length] : slot) % PHOTOS.length;
+  const norm = (m) => (typeof m === "string" ? { thumb: m, full: m } : m);
+  const media = (slot) => norm(PHOTOS[mediaIndex(slot)]);
+  window.GALLERY_MEDIA = PHOTOS.map(norm); // each photo once, for the expanded view
 
   function buildTile() {
     const tile = document.createElement("div");
@@ -69,7 +74,7 @@
       let el;
       if (PHOTOS.length) {
         const m = media(i);
-        slot.dataset.index = i % PHOTOS.length;
+        slot.dataset.index = mediaIndex(i);
         if (m.loop) {
           el = document.createElement("video");
           Object.assign(el, { src: m.loop, muted: true, loop: true, autoplay: true, playsInline: true, preload: "metadata" });
@@ -96,15 +101,15 @@
   // Enough tile copies to cover the screen at any offset.
   let tiles = [], cols = 0, rows = 0;
   function layoutTiles() {
-    const c = Math.ceil(innerWidth / TILE_W) + 1;
-    const r = Math.ceil(innerHeight / TILE_H) + 1;
+    const c = Math.ceil(innerWidth / SUPER_W) + 1;
+    const r = Math.ceil(innerHeight / SUPER_H) + 1;
     if (c === cols && r === rows) return;
     cols = c; rows = r;
     plane.innerHTML = "";
     tiles = [];
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       const t = buildTile();
-      t.style.transform = `translate(${i * TILE_W}px, ${j * TILE_H}px)`;
+      t.style.transform = `translate(${i * SUPER_W}px, ${j * SUPER_H}px)`;
       plane.appendChild(t);
       tiles.push(t);
     }
@@ -118,8 +123,8 @@
   const mod = (a, n) => ((a % n) + n) % n;
   function render() {
     // Wrap the offset so the plane never runs out.
-    const x = mod(ox, TILE_W) - TILE_W;
-    const y = mod(oy, TILE_H) - TILE_H;
+    const x = mod(ox, SUPER_W) - SUPER_W;
+    const y = mod(oy, SUPER_H) - SUPER_H;
     plane.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     // paper moves with the photos, wrapped on its own tile size
     bg.style.transform = `translate3d(${mod(ox, BG_W) - BG_W}px, ${mod(oy, BG_H) - BG_H}px, 0)`;
