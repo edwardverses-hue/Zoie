@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>our gallery</title>
+  <link rel="icon" href="data:," />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="bg"></div>
+
+  <!-- endless photo plane: tiles are built by main.js -->
+  <div id="stage" aria-label="Photo gallery. Drag to explore.">
+    <div id="plane"></div>
+  </div>
+
+  <!-- keychain sits in the middle, pinned while the photos move -->
+  <canvas id="keychain" aria-hidden="true"></canvas>
+
+  <header>
+    <span>our gallery</span>
+    <span>11.17.2026</span>
+    <span>happy birthday &lt;3</span>
+  </header>
+
+  <p id="hint">drag anywhere</p>
+
+  <script src="photos.js"></script>
+  <script src="main.js"></script>
+  <script src="keychain.js"></script>
+</body>
+</html>
