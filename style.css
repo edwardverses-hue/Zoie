@@ -117,11 +117,21 @@ body.viewing #viewer figure { transform: rotate(-0.4deg) scale(1); }
 
 #keychain {
   position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* input is handled by main.js so drag works everywhere */
+  left: 50%;
+  top: 52%;
+  width: min(76vh, 92vw);       /* same share of the screen as the reference */
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(20, 40, 90, 0.18));
 }
+.kc-layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 40%;    /* the ring point */
+  will-change: transform;
+}
+.kc-layer img { width: 100%; height: 100%; display: block; -webkit-user-drag: none; }
 
 /* two views: gallery (default) and birthday (keychain) */
 #plane, #keychain { transition: opacity 0.5s ease; }
