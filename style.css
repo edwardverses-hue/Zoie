@@ -33,16 +33,77 @@ html, body {
 
 .tile { position: absolute; left: 0; top: 0; }
 
-/* each photo is an SVG: hand-cut white backing + clipped photo (shapes from Figma) */
+/* each photo: hand-cut white backing (SVG) + photo/clip clipped to its shape (from Figma) */
 .photo {
   position: absolute;
-  overflow: visible;
   filter: drop-shadow(0 1px 1.5px rgba(20, 40, 90, 0.18));
-  pointer-events: none;
 }
-.photo .num {
-  fill: #fff;
+.photo[data-index] { cursor: zoom-in; }
+#stage.dragging .photo[data-index] { cursor: grabbing; }
+.photo svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.photo .media {
+  position: absolute;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.photo .empty {
+  background: #b9cdf5;
+  display: grid;
+  place-items: center;
+  color: #fff;
   font: 28px "Reenie Beanie", cursive;
+}
+
+/* expanded view */
+#viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(70, 105, 190, 0.55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  touch-action: none;
+}
+body.viewing #viewer { opacity: 1; pointer-events: auto; }
+#viewer figure {
+  position: relative;
+  background: #fff;
+  padding: 7px 10px 9px 7px;      /* uneven on purpose, like the cut frames */
+  transform: rotate(-0.4deg) scale(0.96);
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+  box-shadow: 0 10px 40px rgba(20, 40, 90, 0.35);
+  line-height: 0;
+}
+body.viewing #viewer figure { transform: rotate(-0.4deg) scale(1); }
+#viewer img, #viewer video {
+  display: block;
+  max-width: min(88vw, 1400px);
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+}
+#viewer .vbtn {
+  position: fixed;
+  font: 32px "Reenie Beanie", cursive;
+  color: #fff;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 12px 18px;
+}
+#viewer .close { top: 20px; right: 28px; }
+#viewer .prev { left: 12px; top: 50%; transform: translateY(-50%); }
+#viewer .next { right: 12px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 720px) {
+  #viewer .prev, #viewer .next { top: auto; bottom: 24px; transform: none; }
+  #viewer img, #viewer video { max-width: 92vw; max-height: 72vh; }
 }
 
 #keychain {

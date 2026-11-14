@@ -37,8 +37,16 @@
   const hint = document.getElementById("hint");
 
   const NS = "http://www.w3.org/2000/svg";
-  let clipId = 0;
   const svgEl = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); return el; };
+
+  // A PHOTOS entry is either "photos/x.webp" or { thumb, full, loop, video }:
+  //   thumb: small image for the gallery    full: big image for the expanded view
+  //   loop: short muted clip for the gallery    video: full clip (with sound) for the expanded view
+  const media = (i) => {
+    const m = PHOTOS[i % PHOTOS.length];
+    return typeof m === "string" ? { thumb: m, full: m } : m;
+  };
+  window.GALLERY_MEDIA = PHOTOS.map((_, i) => media(i));
 
   function buildTile() {
     const tile = document.createElement("div");
@@ -47,33 +55,40 @@
       const [, , gw, gh] = s.g;
       const [bx, by, brot, bpath] = s.b;
       const [px, py, pw, ph, mask] = s.p;
-      const svg = svgEl("svg", { class: "photo", width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
-      svg.style.left = s.x + "px";
-      svg.style.top = s.y + "px";
+
+      const slot = document.createElement("div");
+      slot.className = "photo";
+      Object.assign(slot.style, { left: s.x + "px", top: s.y + "px", width: gw + "px", height: gh + "px" });
 
       // white backing, cut by hand in Figma (Figma rotation is counter-clockwise)
+      const svg = svgEl("svg", { width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
       svg.appendChild(svgEl("path", { d: bpath, fill: "#fff", transform: `translate(${bx} ${by}) rotate(${-brot})` }));
+      slot.appendChild(svg);
 
-      // photo, clipped to its own (sometimes uneven) shape
-      const id = "c" + clipId++;
-      const clip = svgEl("clipPath", { id });
-      clip.appendChild(mask
-        ? svgEl("path", { d: mask, transform: `translate(${px} ${py})` })
-        : svgEl("rect", { x: px, y: py, width: pw, height: ph }));
-      svg.appendChild(clip);
-
+      // photo or looping clip, clipped to its own (sometimes uneven) shape
+      let el;
       if (PHOTOS.length) {
-        svg.appendChild(svgEl("image", {
-          href: PHOTOS[i % PHOTOS.length], x: px, y: py, width: pw, height: ph,
-          preserveAspectRatio: "xMidYMid slice", "clip-path": `url(#${id})`,
-        }));
+        const m = media(i);
+        slot.dataset.index = i % PHOTOS.length;
+        if (m.loop) {
+          el = document.createElement("video");
+          Object.assign(el, { src: m.loop, muted: true, loop: true, autoplay: true, playsInline: true, preload: "metadata" });
+          el.setAttribute("muted", ""); el.setAttribute("playsinline", "");
+          if (m.thumb) el.poster = m.thumb;
+        } else {
+          el = document.createElement("img");
+          Object.assign(el, { src: m.thumb, alt: "", loading: "lazy", decoding: "async", draggable: false });
+        }
       } else {
-        svg.appendChild(svgEl("rect", { x: px, y: py, width: pw, height: ph, fill: "#b9cdf5", "clip-path": `url(#${id})` }));
-        const t = svgEl("text", { x: px + pw / 2, y: py + ph / 2, "text-anchor": "middle", "dominant-baseline": "middle", class: "num" });
-        t.textContent = i + 1;
-        svg.appendChild(t);
+        el = document.createElement("div");
+        el.className = "empty";
+        el.textContent = i + 1;
       }
-      tile.appendChild(svg);
+      el.classList.add("media");
+      Object.assign(el.style, { left: px + "px", top: py + "px", width: pw + "px", height: ph + "px" });
+      if (mask) el.style.clipPath = `path("${mask}")`;
+      slot.appendChild(el);
+      tile.appendChild(slot);
     });
     return tile;
   }
@@ -111,7 +126,8 @@
   }
 
   // ---- input: keychain first, otherwise pan ----
-  let mode = null, lastX = 0, lastY = 0, lastT = 0, moved = 0;
+  let mode = null, lastX = 0, lastY = 0, lastT = 0, moved = 0, downSlot = null;
+  const viewerOpen = () => document.body.classList.contains("viewing");
   const K = () => window.Keychain;
 
   stage.addEventListener("pointerdown", (e) => {
@@ -121,6 +137,7 @@
       return; // no panning on the birthday page
     }
     mode = "pan"; moved = 0;
+    downSlot = e.target.closest && e.target.closest(".photo[data-index]");
     vx = vy = 0;
     lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
     stage.classList.add("dragging");
@@ -139,8 +156,13 @@
     if (moved > 20) hint.classList.add("gone");
   });
 
-  const end = () => {
+  const end = (e) => {
     if (mode === "charm") K().release();
+    if (mode === "pan" && downSlot && moved < 8 && e.type === "pointerup" && window.Viewer) {
+      vx = vy = 0;
+      window.Viewer.open(+downSlot.dataset.index);
+    }
+    downSlot = null;
     if (mode === "pan" && performance.now() - lastT > 80) { vx = vy = 0; } // held still before letting go
     mode = null;
     stage.classList.remove("dragging");
@@ -151,7 +173,7 @@
   // trackpad / mouse wheel pans both ways
   addEventListener("wheel", (e) => {
     e.preventDefault();
-    if (document.body.classList.contains("birthday")) return;
+    if (document.body.classList.contains("birthday") || viewerOpen()) return;
     const dx = e.shiftKey ? e.deltaY : e.deltaX;
     const dy = e.shiftKey ? 0 : e.deltaY;
     ox -= dx; oy -= dy; vx = vy = 0;
@@ -160,7 +182,7 @@
 
   // keyboard
   addEventListener("keydown", (e) => {
-    if (document.body.classList.contains("birthday")) return;
+    if (document.body.classList.contains("birthday") || viewerOpen()) return;
     const step = 120;
     if (e.key === "ArrowLeft") vx += step / 8;
     if (e.key === "ArrowRight") vx -= step / 8;

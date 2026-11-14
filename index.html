@@ -30,9 +30,17 @@
 
   <p id="hint">drag anywhere</p>
 
+  <div id="viewer" role="dialog" aria-modal="true" aria-label="Photo">
+    <figure></figure>
+    <button class="vbtn close" type="button">close</button>
+    <button class="vbtn prev" type="button" aria-label="Previous">&larr; prev</button>
+    <button class="vbtn next" type="button" aria-label="Next">next &rarr;</button>
+  </div>
+
   <script src="photos.js"></script>
   <script src="main.js"></script>
   <script src="keychain.js"></script>
   <script src="router.js"></script>
+  <script src="viewer.js"></script>
 </body>
 </html>
