@@ -175,7 +175,11 @@
       return false;
     },
     move(x, y) { hx = x + grabOff.x; hy = y + grabOff.y; },
-    release() { held = null; }, // verlet keeps the throw velocity
+    release() { held = null; },
+    hits(x, y) {
+      if (charms.some((c) => { const p = charmPose(c); return Math.hypot(x - p.cx, y - p.cy) < Math.max(c.w, c.h) / 2 + 8; })) return true;
+      return Math.hypot(x - ring.x, y - ring.y) < RING_R + 12;
+    }, // verlet keeps the throw velocity
     swing() { pts.forEach((p, i) => { if (!p.pinned) p.px -= 4 + i * 0.25; }); }, // little sway on arrival
   };
 })();
