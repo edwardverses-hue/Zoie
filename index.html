@@ -22,6 +22,31 @@
   <!-- keychain sits in the middle, pinned while the photos move -->
   <div id="keychain" aria-hidden="true"></div>
 
+  <!-- birthday page scrolls: keychain hero, then the card slides up over it (after wildyriftian.com) -->
+  <div id="bday" aria-label="Birthday">
+    <section class="bday-hero">
+      <p class="bday-side left">a collection of us</p>
+      <p class="bday-side right">zoie, 2026</p>
+      <p class="bday-scroll">scroll down<br>&darr;</p>
+    </section>
+    <section class="bday-card-wrap">
+      <article class="bday-card">
+        <span class="dot tl"></span><span class="dot tr"></span><span class="dot bl"></span><span class="dot br"></span>
+        <p class="card-tag">for you</p>
+        <h2 class="card-title">Zoie<br>is</h2>
+        <div class="card-grid">
+          <div class="card-charm" aria-hidden="true"><div class="hanger"></div></div>
+          <div class="card-side">
+            <p class="card-label" aria-live="polite"></p>
+            <p class="card-copy">PLACEHOLDER: write her a note here. Two or three short lines about her, the way the reference introduces its designer.</p>
+            <p class="card-copy">PLACEHOLDER: a second line if you want one.</p>
+          </div>
+        </div>
+        <div class="card-foot"><span>happy birthday</span><span>11.17.2026</span><span>with love, edward</span></div>
+      </article>
+    </section>
+  </div>
+
   <header>
     <a href="#gallery" data-view="gallery">our gallery</a>
     <span>11.17.2026</span>
@@ -42,6 +67,7 @@
   <script src="photos.js"></script>
   <script src="main.js"></script>
   <script src="keychain.js"></script>
+  <script src="card.js"></script>
   <script src="router.js"></script>
   <script src="viewer.js"></script>
   <script src="intro.js"></script>
