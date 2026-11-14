@@ -31,6 +31,8 @@
   const PHOTOS = window.PHOTOS || [];
 
   const stage = document.getElementById("stage");
+  const bg = document.getElementById("bg");
+  const BG_W = 1440, BG_H = 1024; // background tile size (Figma frame)
   const plane = document.getElementById("plane");
   const hint = document.getElementById("hint");
 
@@ -104,6 +106,8 @@
     const x = mod(ox, TILE_W) - TILE_W;
     const y = mod(oy, TILE_H) - TILE_H;
     plane.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    // paper moves with the photos, wrapped on its own tile size
+    bg.style.transform = `translate3d(${mod(ox, BG_W) - BG_W}px, ${mod(oy, BG_H) - BG_H}px, 0)`;
   }
 
   // ---- input: keychain first, otherwise pan ----
