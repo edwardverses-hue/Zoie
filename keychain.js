@@ -24,7 +24,7 @@
 
   function anchorPos() {
     const small = innerWidth < 720;
-    return { x: innerWidth / 2, y: innerHeight / 2 - (small ? 150 : 190) };
+    return { x: innerWidth / 2, y: innerHeight / 2 - (small ? 130 : 160) };
   }
 
   // build: fixed pin -> short chain -> ring -> one strand per charm
@@ -176,5 +176,6 @@
     },
     move(x, y) { hx = x + grabOff.x; hy = y + grabOff.y; },
     release() { held = null; }, // verlet keeps the throw velocity
+    swing() { pts.forEach((p, i) => { if (!p.pinned) p.px -= 4 + i * 0.25; }); }, // little sway on arrival
   };
 })();

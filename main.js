@@ -77,7 +77,10 @@
 
   stage.addEventListener("pointerdown", (e) => {
     stage.setPointerCapture(e.pointerId);
-    if (K() && K().grab(e.clientX, e.clientY)) { mode = "charm"; return; }
+    if (document.body.classList.contains("birthday")) {
+      if (K() && K().grab(e.clientX, e.clientY)) mode = "charm";
+      return; // no panning on the birthday page
+    }
     mode = "pan"; moved = 0;
     vx = vy = 0;
     lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
@@ -109,6 +112,7 @@
   // trackpad / mouse wheel pans both ways
   addEventListener("wheel", (e) => {
     e.preventDefault();
+    if (document.body.classList.contains("birthday")) return;
     const dx = e.shiftKey ? e.deltaY : e.deltaX;
     const dy = e.shiftKey ? 0 : e.deltaY;
     ox -= dx; oy -= dy; vx = vy = 0;
@@ -117,6 +121,7 @@
 
   // keyboard
   addEventListener("keydown", (e) => {
+    if (document.body.classList.contains("birthday")) return;
     const step = 120;
     if (e.key === "ArrowLeft") vx += step / 8;
     if (e.key === "ArrowRight") vx -= step / 8;
