@@ -79,6 +79,8 @@
           el = document.createElement("video");
           Object.assign(el, { src: m.loop, muted: true, loop: true, autoplay: true, playsInline: true, preload: "metadata" });
           el.setAttribute("muted", ""); el.setAttribute("playsinline", "");
+          el.setAttribute("disablepictureinpicture", ""); el.setAttribute("disableremoteplayback", "");
+          el.controls = false;
           if (m.thumb) el.poster = m.thumb;
         } else {
           el = document.createElement("img");
@@ -208,7 +210,14 @@
     requestAnimationFrame(frame);
   }
 
+  // Gallery loops: if the phone blocks autoplay (e.g. iPhone Low Power Mode) they show
+  // their still frame, then start on her first touch anywhere.
+  const loops = () => plane.querySelectorAll("video");
+  const playAll = () => loops().forEach((v) => { const p = v.play(); if (p) p.catch(() => {}); });
+  ["pointerdown", "touchstart", "keydown"].forEach((t) => addEventListener(t, playAll, { passive: true }));
+
   addEventListener("resize", layoutTiles);
   layoutTiles();
+  playAll();
   requestAnimationFrame(frame);
 })();

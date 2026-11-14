@@ -48,6 +48,15 @@ html, body {
   pointer-events: none;
   -webkit-user-drag: none;
 }
+/* hide iOS Safari's own play overlay on the gallery loops (shows in Low Power Mode) */
+.photo video::-webkit-media-controls,
+.photo video::-webkit-media-controls-panel,
+.photo video::-webkit-media-controls-overlay-play-button,
+.photo video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
+}
 .photo .empty {
   background: #b9cdf5;
   display: grid;
