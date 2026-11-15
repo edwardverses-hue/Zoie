@@ -18,13 +18,13 @@
   const LAYERS = [
     { src: "keychain/05illustration.webp", amp: -3, order: 5 },
     { src: "keychain/04photoworks.webp", amp: -3, order: 4 },
-    { src: "keychain/03editorial.webp", amp: 2, order: 3 },
     { src: "keychain/02branding.webp", amp: 3, order: 1 },
     { src: "keychain/06photo.webp", amp: 2, order: 2 },   // the acrylic photo keychain (real)
+    { src: "keychain/03gwen.webp", amp: 2, order: 3 },    // LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
     { src: "keychain/01suki.webp", amp: 3, order: 0 },    // Suki S2000 Hot Wheels, top-down (real photo of the loose car)
     { src: "keychain/00padlock.webp", top: true },
   ];
-  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [28.75, 34.083, 22.5, 44.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03editorial.webp": [42.667, 34.167, 24.0, 64.083], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [33.667, 33.917, 30.75, 54.083]};
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [28.75, 34.083, 22.5, 44.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [48.833, 33.917, 30.667, 55.0], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [33.667, 33.917, 30.75, 54.083]};
   const SWING = 30;          // degrees the other charms move aside
   const PERIOD = 3600, BOB = 4, REF = 461;
   const K = 170, D = 15;     // spring stiffness / damping: settles in ~0.8 s with a small overshoot
