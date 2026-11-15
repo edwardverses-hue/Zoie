@@ -147,6 +147,15 @@
     zoomBtn.dataset.zoom = z1 < 1 ? "out" : "in";
     document.body.classList.toggle("zoomed-out", z1 < 1);
   }
+  // back to the opening view (used when the opening plays again)
+  window.Gallery = {
+    reset() {
+      zoomAnim = null; Z = 1; vx = vy = 0;
+      ox = innerWidth / 2 - LAYOUT.start[0] * S; oy = innerHeight / 2 - LAYOUT.start[1] * S;
+      zoomBtn.dataset.zoom = "in"; document.body.classList.remove("zoomed-out");
+      render();
+    },
+  };
   zoomBtn.addEventListener("click", (e) => { e.stopPropagation(); zoomTo(Z < 1 ? 1 : fitZ()); hint.classList.add("gone"); });
   zoomBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
 

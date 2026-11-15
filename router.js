@@ -12,6 +12,10 @@
     if (window.Keychain) window.Keychain.reset();
     first = false;
   }
-  addEventListener("hashchange", show);
+  // opening "our gallery" (from the keychain, or clicking it again) replays the opening
+  addEventListener("hashchange", () => { show(); if (location.hash !== "#birthday" && window.Intro) window.Intro.play(); });
+  document.querySelector('header a[data-view="gallery"]').addEventListener("click", () => {
+    if (location.hash === "#gallery" && window.Intro) window.Intro.play();   // same hash: no hashchange fires
+  });
   show();
 })();
