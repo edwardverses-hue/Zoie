@@ -32,6 +32,7 @@
       slot.dataset.index = s.i;
       // the box includes an 8px margin so the cut border and shadow aren't clipped (.photo uses paint containment)
       const P = 8;
+      if (s.r) slot.style.transform = `rotate(${s.r}deg)`;
       Object.assign(slot.style, { left: (s.x - P) * S + "px", top: (s.y - P) * S + "px", width: (s.w + 2 * P) * S + "px", height: (s.h + 2 * P) * S + "px" });
 
       // white backing, cut by hand (uneven border, nudged corners) + a soft paper shadow
