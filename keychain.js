@@ -20,13 +20,13 @@
     // its ring, so they read as threaded through it
     { src: "keychain/00padlock.webp", top: true },
     { src: "keychain/05illustration.webp", amp: -3, order: 5, hov: 0 },    // reference slot L1 (star)
-    { src: "keychain/04photoworks.webp", amp: -3, order: 4, hov: 9 },     // reference slot L2
     { src: "keychain/02branding.webp", amp: 3, order: 1, hov: -7 },       // reference slot L4
     { src: "keychain/06photo.webp", amp: 3, order: 2, hov: -4 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
     { src: "keychain/03gwen.webp", amp: 2, order: 3, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
+    { src: "keychain/04prince.webp", amp: -3, order: 4, hov: 9 },        // Hirono x Le Petit Prince: The Little Prince (Pop Mart photo); reference slot L2
     { src: "keychain/01suki.webp", amp: 3, order: 0, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
   ];
-  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04prince.webp": [47.583, 32.917, 23.25, 43.417], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
   // Motion measured from wildyriftian.com (headless Chrome, 1440x900, every frame):
   //  idle  - one shared cosine phase p (period 3.52 s): padlock moves down 4px*p; each
   //          charm moves down 4px*p, sideways -amp*p px and rotates amp*p deg (px at a 720px box)
