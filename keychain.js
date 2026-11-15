@@ -13,15 +13,15 @@
 // On phones, touching or sliding a finger across the strips does the same.
 (() => {
   // Back to front. amp: idle sway degrees. order: left-to-right strip position.
-  // PLACEHOLDERS: the padlock and charms 01-05 are wildyriftian.com's own art,
+  // PLACEHOLDERS: the padlock and charms 02-05 are wildyriftian.com's own art,
   // standing in until Edward's charms are cut out. Swap each file before sharing.
   const LAYERS = [
     { src: "keychain/05illustration.webp", amp: -3, order: 5 },
     { src: "keychain/04photoworks.webp", amp: -3, order: 4 },
     { src: "keychain/03editorial.webp", amp: 2, order: 3 },
     { src: "keychain/02branding.webp", amp: 3, order: 1 },
-    { src: "keychain/01motion.webp", amp: 3, order: 0 },
     { src: "keychain/06photo.webp", amp: 2, order: 2 },   // the acrylic photo keychain (real)
+    { src: "keychain/01suki.webp", amp: 3, order: 0 },    // Suki's S2000 enamel keychain (real product photo)
     { src: "keychain/00padlock.webp", top: true },
   ];
   const SWING = 30;          // degrees the other charms move aside
