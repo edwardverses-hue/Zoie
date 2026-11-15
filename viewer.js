@@ -29,17 +29,23 @@
     fig.appendChild(el);
   }
 
-  function open(i) { show(i); document.body.classList.add("viewing"); }
+  function open(i) { armed = false; show(i); document.body.classList.add("viewing"); }
   function close() {
     document.body.classList.remove("viewing");
     const v = fig.querySelector("video"); if (v) v.pause();
   }
 
-  viewer.querySelector(".close").addEventListener("click", close);
-  viewer.querySelector(".prev").addEventListener("click", (e) => { e.stopPropagation(); show(index - 1); });
-  viewer.querySelector(".next").addEventListener("click", (e) => { e.stopPropagation(); show(index + 1); });
+  // Only act on clicks whose press started inside the open viewer. The tap that opens a
+  // photo fires its click after the viewer is already up; without this it could land on
+  // the backdrop (or a button) and close the viewer straight away, e.g. on a phone held sideways.
+  let armed = false;
+  viewer.addEventListener("pointerdown", () => { armed = true; }, true);
+  const guard = (fn) => (e) => { if (!armed) { e.stopPropagation(); return; } fn(e); };
+  viewer.querySelector(".close").addEventListener("click", guard(close));
+  viewer.querySelector(".prev").addEventListener("click", guard((e) => { e.stopPropagation(); show(index - 1); }));
+  viewer.querySelector(".next").addEventListener("click", guard((e) => { e.stopPropagation(); show(index + 1); }));
   let swiped = false;
-  viewer.addEventListener("click", (e) => { if (e.target === viewer && !swiped) close(); swiped = false; }); // tap outside the photo
+  viewer.addEventListener("click", (e) => { if (armed && e.target === viewer && !swiped) close(); swiped = false; armed = false; }); // tap outside the photo
 
   // swipe left/right to flip through
   let sx = null, sy = null;

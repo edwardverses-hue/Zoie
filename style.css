@@ -374,3 +374,21 @@ body.zoomed-out #hint { opacity: 0; }
   #zoom { display: none; }
   #minimap { right: 16px; bottom: 16px; }
 }
+
+/* ---- phones: audit fixes ---- */
+/* header stays readable over bright photos */
+header { text-shadow: 0 1px 6px rgba(22, 44, 96, 0.42); }
+header a .ink { filter: drop-shadow(0 1px 3px rgba(22, 44, 96, 0.38)); }
+/* the photo viewer has its own close button: hide the header under it */
+body.viewing header { opacity: 0; pointer-events: none; }
+header { transition: opacity 0.25s; }
+@media (max-width: 720px) {
+  /* headline never runs edge to edge on narrow phones */
+  #headline span { font-size: min(44px, 10.6vw); }
+  /* hint bottom-left so it never runs into the minimap (bottom-right) */
+  #hint { text-align: left; left: 16px; right: auto; bottom: 18px; }
+}
+@media (max-height: 500px) {
+  #hint { text-align: left; left: 24px; right: auto; }
+  #headline span { font-size: 30px; }
+}
