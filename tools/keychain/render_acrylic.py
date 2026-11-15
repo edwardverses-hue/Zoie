@@ -106,26 +106,10 @@ t = np.deg2rad(ROT)
 hxr = cxr + vx * np.cos(t) + vy * np.sin(t); hyr = cyr - vx * np.sin(t) + vy * np.cos(t)
 canvas.alpha_composite(rot, (int(HOLE_AT[0] * SS - hxr), int(HOLE_AT[1] * SS - hyr)))
 
-# ---- the wire link from the ring into the hole (drawn like the reference wires) ----
-wire = np.zeros((CAN, CAN, 4))
-x1, y1 = RING_PT[0] * SS, RING_PT[1] * SS
-x2, y2 = HOLE_AT[0] * SS, (HOLE_AT[1] + 4) * SS
-W2 = 3.0 * SS                       # half-width
-lo_x, hi_x = int(min(x1, x2) - 20 * SS), int(max(x1, x2) + 20 * SS)
-lo_y, hi_y = int(y1 - 20 * SS), int(y2 + 20 * SS)
-gy2, gx2 = np.mgrid[lo_y:hi_y, lo_x:hi_x]
-dx, dy = x2 - x1, y2 - y1; L2 = dx * dx + dy * dy
-tt = np.clip(((gx2 - x1) * dx + (gy2 - y1) * dy) / L2, 0, 1)
-qx, qy = x1 + tt * dx, y1 + tt * dy
-nx, ny = -dy / np.sqrt(L2), dx / np.sqrt(L2)
-off = ((gx2 - qx) * nx + (gy2 - qy) * ny) / W2          # -1..1 across the wire
-r = np.sqrt((gx2 - qx) ** 2 + (gy2 - qy) ** 2) / W2
-alpha = np.clip((1 - r) * W2 / SS * 1.2, 0, 1)
-shade = 200 - 120 * np.abs(off) ** 1.5 + 55 * np.exp(-((off + 0.35) / 0.18) ** 2)   # metal: dark edges, bright streak
-col = np.stack([shade * 0.98, shade, shade * 1.03], -1).clip(0, 255)
-wire[lo_y:hi_y, lo_x:hi_x, :3] = col
-wire[lo_y:hi_y, lo_x:hi_x, 3] = alpha * 255
-wire_im = Image.fromarray(wire.astype(np.uint8), 'RGBA')
+# ---- the reference's own split ring, from the padlock ring into the hole ----
+import sys, os; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ref_ring import ring_layer
+wire_im = ring_layer(RING_PT, (HOLE_AT[0], HOLE_AT[1] + HOLE_R * 0.35), SS, CAN)
 # wire goes behind the slab but shows through the hole
 out = Image.new('RGBA', (CAN, CAN), (0, 0, 0, 0))
 out.alpha_composite(wire_im); out.alpha_composite(canvas)

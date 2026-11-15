@@ -9,7 +9,6 @@ sys.path.insert(0, '.')
 
 SCALE = float(sys.argv[1]) if len(sys.argv) > 1 else 0.5
 ROT = float(sys.argv[2]) if len(sys.argv) > 2 else 0     # + swings her to the right (counter-clockwise image rotation)
-RING_PT = (604, 414)
 SS = 2; CAN = 1200 * SS
 
 src = Image.open('ghost-spider-854292.png').convert('RGBA')
@@ -32,14 +31,17 @@ def metal(cx, cy, R, half=2.4):
     out[gy, gx, :3] = np.stack([sh * .98, sh, sh * 1.03], -1).clip(0, 255); out[gy, gx, 3] = al * 255
     return Image.fromarray(out.astype(np.uint8))
 
-R = 9 * SS
-ring_c = (RING_PT[0] * SS, RING_PT[1] * SS + R * 0.9)                    # jump ring threaded on the padlock ring
+# the reference's own split ring (see ref_ring.py) from the padlock ring, through
+# the top link of her real LEGO chain
+from ref_ring import ring_layer
+RING_TOP = (628, 412)
+LINK = (640, 500)                                                        # top of her chain (1200 px)
 out = Image.new('RGBA', (CAN, CAN), (0, 0, 0, 0))
 px, py = chain_x * k, 0
 pad = Image.new('RGBA', (body.width * 3, body.height * 2 + body.width * 2), (0, 0, 0, 0)); ox, oy = body.width, body.width
 pad.alpha_composite(body, (ox, oy))
 pad = pad.rotate(ROT, resample=Image.BICUBIC, center=(ox + px, oy + py))
-out.alpha_composite(pad, (int(ring_c[0] - ox - px), int(ring_c[1] + R - 3 * SS - oy)))
-out.alpha_composite(metal(*ring_c, R))
+out.alpha_composite(pad, (int(LINK[0] * SS - ox - px), int(LINK[1] * SS - oy)))
+out.alpha_composite(ring_layer(RING_TOP, (LINK[0], LINK[1] + 8), SS, CAN))   # ring passes through the top link, in front
 out.resize((1200, 1200), Image.LANCZOS).save('/home/claude/gwen/03gwen.png')
 print('ok', 'chain starts at source row', top)

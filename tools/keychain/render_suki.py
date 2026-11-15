@@ -8,7 +8,6 @@ import numpy as np
 
 PIV_AT = (int(sys.argv[1]), int(sys.argv[2])) if len(sys.argv) > 2 else (520, 560)
 ROT = float(sys.argv[3]) if len(sys.argv) > 3 else 82      # 90 = plumb; lower leans outward (left)
-RING_PT = (604, 414)
 SS = 2; CAN = 1200 * SS; S = (float(sys.argv[4]) if len(sys.argv) > 4 else 0.54) * SS
 
 car = Image.open('car_local.png').convert('RGBA')
@@ -45,12 +44,14 @@ def metal_ring(cx, cy, R, half=2.4):
     out[gy, gx, :3] = np.stack([sh * .98, sh, sh * 1.03], -1).clip(0, 255); out[gy, gx, 3] = a * 255
     return Image.fromarray(out.astype(np.uint8))
 
-R = 10 * SS
-ringc = (PIV_AT[0] * SS, PIV_AT[1] * SS - R * 0.6)
+# the reference's own split ring (see ref_ring.py) from the padlock ring to the tail,
+# tucked behind the car so it disappears into the tail like a screw eye
+sys.path.insert(0, '/home/claude/zoie/tools/keychain')
+from ref_ring import ring_layer
+RING_TOP = (594, 412)
 out = Image.new('RGBA', (CAN, CAN), (0, 0, 0, 0))
-out.alpha_composite(metal_line(RING_PT[0] * SS, RING_PT[1] * SS, ringc[0], ringc[1] - R))
+out.alpha_composite(ring_layer(RING_TOP, (PIV_AT[0] + 4, PIV_AT[1] + 6), SS, CAN))
 out.alpha_composite(body)
-out.alpha_composite(metal_ring(*ringc, R))
 out.resize((1200, 1200), Image.LANCZOS).save('01suki.png')
 
 order = ['05illustration', '04photoworks', '03editorial', '02branding', '06photo', 'SUKI', '00padlock']

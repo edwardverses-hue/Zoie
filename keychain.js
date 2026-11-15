@@ -16,18 +16,24 @@
   // PLACEHOLDERS: the padlock and charms 02-05 are wildyriftian.com's own art,
   // standing in until Edward's charms are cut out. Swap each file before sharing.
   const LAYERS = [
-    { src: "keychain/05illustration.webp", amp: -3, order: 5 },
-    { src: "keychain/04photoworks.webp", amp: -3, order: 4 },
-    { src: "keychain/02branding.webp", amp: 3, order: 1 },
-    { src: "keychain/06photo.webp", amp: 2, order: 2 },   // the acrylic photo keychain (real)
-    { src: "keychain/03gwen.webp", amp: 2, order: 3 },    // LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
-    { src: "keychain/01suki.webp", amp: 3, order: 0 },    // Suki S2000 Hot Wheels, top-down (real photo of the loose car)
+    { src: "keychain/05illustration.webp", amp: -3, order: 5, hov: 0 },    // reference slot L1 (star)
+    { src: "keychain/04photoworks.webp", amp: -3, order: 4, hov: 9 },     // reference slot L2
+    { src: "keychain/02branding.webp", amp: 3, order: 1, hov: -7 },       // reference slot L4
+    { src: "keychain/06photo.webp", amp: 3, order: 2, hov: -4 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
+    { src: "keychain/03gwen.webp", amp: 2, order: 3, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
+    { src: "keychain/01suki.webp", amp: 3, order: 0, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
     { src: "keychain/00padlock.webp", top: true },
   ];
-  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [28.75, 34.083, 22.5, 44.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [48.833, 33.917, 30.667, 55.0], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [33.667, 33.917, 30.75, 54.083]};
-  const SWING = 30;          // degrees the other charms move aside
-  const PERIOD = 3600, BOB = 4, REF = 461;
-  const K = 170, D = 15;     // spring stiffness / damping: settles in ~0.8 s with a small overshoot
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
+  // Motion measured from wildyriftian.com (headless Chrome, 1440x900, every frame):
+  //  idle  - one shared cosine phase p (period 3.52 s): padlock moves down 4px*p; each
+  //          charm moves down 4px*p, sideways -amp*p px and rotates amp*p deg (px at a 720px box)
+  //  hover - the other charms spring to +/-30 deg (idle rotation keeps running on top,
+  //          their idle drift goes to 0); the hovered charm keeps its idle sway and springs
+  //          to its own small angle (hov). Spring fitted to the recorded curves.
+  const SWING = 30;
+  const PERIOD = 3520, BOB = 4, REF = 720;
+  const K = 95, D = 13.5;
 
   const box = document.getElementById("keychain");
   const els = LAYERS.map((l) => {
@@ -44,7 +50,7 @@
     img.src = l.src; img.alt = ""; img.draggable = false; img.decoding = "async";
     wrap.appendChild(img);
     box.appendChild(wrap);
-    return { ...l, el: wrap, a: 0, v: 0 };   // a: spring angle, v: velocity
+    return { ...l, el: wrap, a: 0, v: 0, w: 1, wv: 0 };   // a: spring angle; w: idle-drift weight
   });
   const charms = els.filter((l) => !l.top);
   const N = charms.length;
@@ -89,11 +95,16 @@
     const y = p * BOB * k;
     for (const l of els) {
       if (l.top) { l.el.style.transform = `translateY(${y}px)`; continue; }
-      const target = hovered < 0 || l.order === hovered ? 0 : l.order < hovered ? SWING : -SWING;
-      if (reduce) { l.a = target; l.v = 0; }
-      else { l.v += (K * (target - l.a) - D * l.v) * dt; l.a += l.v * dt; }
+      const mine = hovered < 0 || l.order === hovered;
+      const target = hovered < 0 ? 0 : l.order === hovered ? l.hov : l.order < hovered ? SWING : -SWING;
+      const wt = mine ? 1 : 0;
+      if (reduce) { l.a = target; l.v = 0; l.w = wt; l.wv = 0; }
+      else {
+        l.v += (K * (target - l.a) - D * l.v) * dt; l.a += l.v * dt;
+        l.wv += (K * (wt - l.w) - D * l.wv) * dt; l.w += l.wv * dt;
+      }
       const r = p * l.amp;
-      l.el.style.transform = `translateX(${-r * k}px) translateY(${y}px) rotate(${r + l.a}deg)`;
+      l.el.style.transform = `translateX(${-r * k * l.w}px) translateY(${y * l.w}px) rotate(${r + l.a}deg)`;
     }
     requestAnimationFrame(loop);
   })(t0);
