@@ -107,42 +107,19 @@
     if (window.Gallery) window.Gallery.reset();
     playing = true;
     body.classList.add("intro");
-    // load every gallery photo now, so none are still blank when they burst in
     document.querySelectorAll("#plane img").forEach((im) => { im.loading = "eager"; if (im.decode) im.decode().catch(() => {}); });
-    buildStage();
-
-    const order = items.map((_, i) => i).sort(() => Math.random() - 0.5);
-    imgs = order.slice(0, BEATS.length + 2).map((i) => { const im = new Image(); im.src = items[i].thumb; return im; });
-    const pile = [];   // newest last: { im, dx, dy }
-
-    const draw = (f, isPile) => {
-      const H = Math.min(f * innerHeight, f * innerWidth * 1.15);
-      const show = isPile ? pile.slice(-4) : pile.slice(-1);
-      cards.forEach((c, i) => {
-        const p = show[i];
-        if (!p) { c.style.display = "none"; return; }
-        const ar = (p.im.naturalWidth || 3) / (p.im.naturalHeight || 4);
-        const top = i === show.length - 1;
-        Object.assign(c.style, {
-          display: "block", zIndex: i, width: H * ar + "px", height: H + "px",
-          backgroundImage: `url("${p.im.src}")`,
-          transform: `translate(-50%, -50%) translate(${top ? 0 : p.dx * H}px, ${top ? 0 : p.dy * H}px)`,
-        });
-      });
-    };
-
-    let n = 0;
-    BEATS.forEach(([t, f, isPile]) => later(t, () => {
-      pile.push({ im: imgs[n++ % imgs.length], dx: rnd(-0.26, 0.26), dy: rnd(-0.12, 0.12) });
-      draw(f, isPile);
-    }));
-    later(END, burst);
-
-    // skip on any input (after the first frame, so the click that started it doesn't count)
-    setTimeout(() => ["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, skip, { once: true, passive: true })), 50);
+    // the opening is the blind box (box.js); she opens it, the gallery bursts out of it
+    const go = () => window.BlindBox.play(() => burst());
+    if (window.BlindBox) go();
+    else {
+      let started = false;
+      addEventListener("blindbox-ready", () => { if (!started) { started = true; go(); } }, { once: true });
+      setTimeout(() => { if (!started && !window.BlindBox) { started = true; burst(); } }, 4000);
+    }
   }
 
-  function skip() { if (playing) { clearAll(); burst(); } }
+  function skip() { if (playing && window.BlindBox) window.BlindBox.skip(); }
+  document.getElementById("bb-skip").addEventListener("click", skip);
 
   function burst() {
     if (!playing) return;

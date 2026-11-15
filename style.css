@@ -429,3 +429,24 @@ header a .ink path { stroke: #1d2a44; }
 #headline .hl-date.in { opacity: 1; transform: none; }
 @media (max-width: 720px) { #headline .hl-date { font-size: 24px; margin-top: 8px; } }
 @media (max-height: 500px) { #headline .hl-date { font-size: 20px; margin-top: 4px; } }
+
+/* ---- blind-box opening (box.js) ---- */
+#blindbox { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 6; display: none; touch-action: none; transition: opacity 0.45s ease 0.12s; }
+#blindbox.gone { opacity: 0; pointer-events: none; }
+body.boxing header, body.boxing #minimap, body.boxing #zoom, body.boxing #hint { opacity: 0 !important; pointer-events: none; }
+#bb-hint {
+  position: fixed; left: 50%; bottom: max(9vh, 64px); z-index: 7; margin: 0;
+  transform: translateX(-50%) rotate(-1.5deg) translateY(6px);
+  font: 30px/1 "Reenie Beanie", cursive; color: #1d2a44;
+  background: #fbfaf6; padding: 0.16em 0.4em 0.04em;
+  clip-path: polygon(2% 9%, 48% 0, 98% 6%, 100% 93%, 55% 100%, 1% 95%);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; white-space: nowrap;
+}
+#bb-hint.on { opacity: 1; transform: translateX(-50%) rotate(-1.5deg); }
+#bb-skip {
+  position: fixed; right: 20px; bottom: 18px; z-index: 7; border: 0; background: none; padding: 6px 8px;
+  font: 22px/1 "Reenie Beanie", cursive; color: rgba(255,255,255,0.85); text-shadow: 0 1px 4px rgba(22,44,96,.4);
+  opacity: 0; pointer-events: none; transition: opacity 0.4s;
+}
+body.boxing #bb-skip { opacity: 1; pointer-events: auto; }
+@media (max-width: 720px) { #bb-hint { font-size: 24px; } }
