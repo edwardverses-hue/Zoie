@@ -67,6 +67,7 @@
 
       // white backing, cut by hand in Figma (Figma rotation is counter-clockwise)
       const svg = svgEl("svg", { width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
+      svg.appendChild(svgEl("path", { d: bpath, fill: "rgba(20,40,90,0.13)", transform: `translate(${bx + 0.6} ${by + 1.4}) rotate(${-brot})` }));
       svg.appendChild(svgEl("path", { d: bpath, fill: "#fff", transform: `translate(${bx} ${by}) rotate(${-brot})` }));
       slot.appendChild(svg);
 
@@ -121,6 +122,8 @@
   let ox = -SHIFT_X + (innerWidth - 1440) / 2;
   let oy = -SHIFT_Y + (innerHeight - 1024) / 2;
   let vx = 0, vy = 0;
+  const ox0 = ox, oy0 = oy;
+  const headline = document.getElementById("headline");
 
   const mod = (a, n) => ((a % n) + n) % n;
   function render() {
@@ -128,6 +131,8 @@
     const x = mod(ox, SUPER_W) - SUPER_W;
     const y = mod(oy, SUPER_H) - SUPER_H;
     plane.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    // headline starts centred and then moves with the photos (it isn't repeated, so it doesn't come back)
+    if (headline) headline.style.transform = `translate(-50%, -50%) translate3d(${ox - ox0}px, ${oy - oy0}px, 0)`;
     // paper moves with the photos, wrapped on its own tile size
     bg.style.transform = `translate3d(${mod(ox, BG_W) - BG_W}px, ${mod(oy, BG_H) - BG_H}px, 0)`;
   }
@@ -198,7 +203,9 @@
   });
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let drawnX = NaN, drawnY = NaN;
   function frame() {
+    if (document.body.classList.contains("birthday")) { requestAnimationFrame(frame); return; }
     if (mode !== "pan") {
       ox += vx; oy += vy;
       const f = reduce ? 0.6 : 0.94; // glide after letting go
@@ -206,18 +213,29 @@
       if (Math.abs(vx) < 0.05) vx = 0;
       if (Math.abs(vy) < 0.05) vy = 0;
     }
-    render();
+    if (ox !== drawnX || oy !== drawnY) { render(); drawnX = ox; drawnY = oy; }
     requestAnimationFrame(frame);
   }
 
   // Gallery loops: if the phone blocks autoplay (e.g. iPhone Low Power Mode) they show
   // their still frame, then start on her first touch anywhere.
   const loops = () => plane.querySelectorAll("video");
-  const playAll = () => loops().forEach((v) => { const p = v.play(); if (p) p.catch(() => {}); });
+  const onScreen = new Set();
+  const allowed = () => !document.body.classList.contains("birthday") && !document.body.classList.contains("viewing");
+  const sync = (v) => {
+    if (onScreen.has(v) && allowed()) { const p = v.play(); if (p) p.catch(() => {}); }
+    else if (!v.paused) v.pause();
+  };
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target); sync(e.target);
+  }), { rootMargin: "150px" });
+  const watch = () => { io.disconnect(); onScreen.clear(); loops().forEach((v) => { v.pause(); io.observe(v); }); };
+  const playAll = () => loops().forEach(sync);
   ["pointerdown", "touchstart", "keydown"].forEach((t) => addEventListener(t, playAll, { passive: true }));
+  new MutationObserver(playAll).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
-  addEventListener("resize", layoutTiles);
+  addEventListener("resize", () => { layoutTiles(); watch(); });
   layoutTiles();
-  playAll();
+  watch();
   requestAnimationFrame(frame);
 })();

@@ -36,7 +36,7 @@ html, body {
 /* each photo: hand-cut white backing (SVG) + photo/clip clipped to its shape (from Figma) */
 .photo {
   position: absolute;
-  filter: drop-shadow(0 1px 1.5px rgba(20, 40, 90, 0.18));
+  contain: layout paint;
 }
 .photo[data-index] { cursor: zoom-in; }
 #stage.dragging .photo[data-index] { cursor: grabbing; }
@@ -124,11 +124,10 @@ body.viewing #viewer figure { transform: rotate(-0.4deg) scale(1); }
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  filter: drop-shadow(0 6px 10px rgba(20, 40, 90, 0.18));
+  /* shadow is baked into the layer images (animating a filter costs a repaint every frame) */
 }
 .kc-layer {
   position: absolute;
-  inset: 0;
   transform-origin: 50% 40%;    /* the ring point */
   will-change: transform;
 }
@@ -308,3 +307,9 @@ header a.current::after { opacity: 1; transform: none; }
 header a:hover::after { opacity: 0.6; transform: none; }
 header { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); column-gap: 10px; }
 @media (max-width: 720px) { header { font-size: min(26px, 5.3vw); padding-left: 16px; padding-right: 16px; } }
+
+/* don't paint the gallery at all while it's hidden behind the birthday page */
+body.birthday #plane { visibility: hidden; }
+
+#headline { will-change: transform; }
+#headline .hl-space { width: 0.38em; background: transparent; box-shadow: none; padding: 0; }

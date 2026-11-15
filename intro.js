@@ -17,7 +17,8 @@
     strip.className = "hl-line";
     [...line].forEach((ch) => {
       const s = document.createElement("span");
-      s.textContent = ch === " " ? " " : ch;
+      s.textContent = ch === " " ? "\u00a0" : ch;
+      if (ch === " ") s.className = "hl-space";
       strip.appendChild(s);
     });
     headline.appendChild(strip);

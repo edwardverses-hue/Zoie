@@ -24,6 +24,7 @@
     { src: "keychain/01suki.webp", amp: 3, order: 0 },    // Suki S2000 Hot Wheels, top-down (real photo of the loose car)
     { src: "keychain/00padlock.webp", top: true },
   ];
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [29.167, 33.917, 22.0, 45.0], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03editorial.webp": [42.667, 34.167, 24.0, 64.083], "04photoworks.webp": [48.167, 33.917, 29.083, 64.583], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [33.667, 33.917, 30.75, 54.083]};
   const SWING = 30;          // degrees the other charms move aside
   const PERIOD = 3600, BOB = 4, REF = 461;
   const K = 170, D = 15;     // spring stiffness / damping: settles in ~0.8 s with a small overshoot
@@ -32,6 +33,13 @@
   const els = LAYERS.map((l) => {
     const wrap = document.createElement("div");
     wrap.className = "kc-layer" + (l.top ? " kc-top" : "");
+    // each layer image is cropped to its charm; place it back where it sits on the
+    // shared square and keep the pivot on the ring point (50% / 40% of the square)
+    const [bl, bt, bw, bh] = BOX[l.src.split("/").pop()];
+    Object.assign(wrap.style, {
+      left: bl + "%", top: bt + "%", width: bw + "%", height: bh + "%",
+      transformOrigin: `${((50 - bl) / bw) * 100}% ${((40 - bt) / bh) * 100}%`,
+    });
     const img = new Image();
     img.src = l.src; img.alt = ""; img.draggable = false; img.decoding = "async";
     wrap.appendChild(img);
@@ -74,6 +82,7 @@
   const t0 = performance.now();
   let last = t0;
   (function loop(now) {
+    if (!document.body.classList.contains("birthday")) { last = now; requestAnimationFrame(loop); return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const p = reduce ? 0 : (1 - Math.cos(((now - t0) / PERIOD) * Math.PI * 2)) / 2;
     const k = box.offsetWidth / REF;
