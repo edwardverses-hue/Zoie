@@ -392,3 +392,40 @@ header { transition: opacity 0.25s; }
   #hint { text-align: left; left: 24px; right: auto; }
   #headline span { font-size: 30px; }
 }
+
+/* ---- header: two links grouped top-left on paper scraps; navy ink loop marks the
+   current page. No date here (it's a stamp under the headline). ---- */
+header { display: flex !important; justify-content: flex-start !important; align-items: baseline; gap: 0.45em; text-shadow: none; }
+header > * { justify-self: auto !important; margin: 0 !important; }
+header a, header a:hover { opacity: 1; }
+header a {
+  position: relative; padding: 0.12em 0.32em 0.02em; color: #1d2a44; isolation: isolate;
+  transform: rotate(-2deg);
+}
+header a[data-view="birthday"] { transform: rotate(1.5deg); }
+header a::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: #fbfaf6;
+  clip-path: polygon(2% 9%, 48% 0, 98% 6%, 100% 93%, 55% 100%, 1% 95%);
+  filter: drop-shadow(0 1px 1px rgba(22, 44, 96, 0.25));
+}
+header a[data-view="birthday"]::before { clip-path: polygon(1% 4%, 52% 7%, 99% 0, 97% 96%, 46% 92%, 3% 100%); }
+header a .ink { left: -0.45em; top: -0.32em; width: calc(100% + 0.9em); height: calc(100% + 0.64em); filter: none; }
+header a .ink path { stroke: #1d2a44; }
+@media (max-width: 720px) {
+  header a .ink { left: -0.45em; top: -0.32em; width: calc(100% + 0.9em); height: calc(100% + 0.64em); }
+}
+
+/* date stamp under the headline */
+#headline .hl-date {
+  margin-top: 12px;
+  font: 32px/1 "Reenie Beanie", cursive;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(22, 44, 96, 0.4);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+#headline .hl-date.in { opacity: 1; transform: none; }
+@media (max-width: 720px) { #headline .hl-date { font-size: 24px; margin-top: 8px; } }
+@media (max-height: 500px) { #headline .hl-date { font-size: 20px; margin-top: 4px; } }

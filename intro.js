@@ -41,6 +41,11 @@
     return { strip, chars, last: li === HEADLINE.length - 1 };
   });
   lines.forEach((l) => headline.appendChild(l.strip));
+  // the date: a small stamp under the name (not in the header; see header notes in style.css)
+  const stamp = document.createElement("div");
+  stamp.className = "hl-date";
+  stamp.textContent = "11.17.2026";
+  headline.appendChild(stamp);
   const allChars = lines.flatMap((l) => l.chars);
 
   const timers = [];
@@ -51,13 +56,15 @@
     headline.classList.remove("on");
     lines.forEach((l) => { l.strip.classList.remove("down"); });
     allChars.forEach((c) => { c.classList.remove("in", "set", "fly"); c.style.transform = ""; });
+    stamp.classList.remove("in");
   }
   function jumble(c) {
     c.style.transform = `translateY(${rnd(-0.22, 0.22).toFixed(2)}em) rotate(${rnd(-7, 7).toFixed(1)}deg) scale(${rnd(0.86, 1.14).toFixed(2)})`;
   }
   function showHeadline(instant) {
     headline.classList.add("on");
-    if (instant) { allChars.forEach((c) => { c.classList.add("in", "set"); c.style.transform = ""; }); lines.forEach((l) => l.strip.classList.add("down")); return; }
+    if (instant) { allChars.forEach((c) => { c.classList.add("in", "set"); c.style.transform = ""; }); lines.forEach((l) => l.strip.classList.add("down")); stamp.classList.add("in"); return; }
+    later(lines.length * 470 + 1150, () => stamp.classList.add("in"));   // after the last letter settles
     lines.forEach((l, li) => {
       const t = li * 470;                                       // line 2 starts 0.47 s after line 1
       const dot = l.last && l.chars[l.chars.length - 1].textContent === "." ? l.chars[l.chars.length - 1] : null;
