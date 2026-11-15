@@ -1,38 +1,11 @@
 // Endless gallery: one tile (from Figma frame "3") repeated in every direction.
 (() => {
-  // Photo slots copied from Figma frame "3", including each hand-cut white backing.
-  // g: group x, y, w, h   b: backing x, y, rotation, path   p: photo x, y, w, h, mask path (or null)
-  const RAW = [
-    {"g":[313,401,151.26,212.42],"b":[0.73,0,-0.2,"M 0 0 L 150.53 0 L 150.53 211.9 L 0 211.9 Z"],"p":[2.12,0.46,148.42,207.78,null]},
-    {"g":[-266,918,127.7,185.18],"b":[0,0,0,"M 3.22 3.2 L 124.22 0 L 127.7 185.18 L 0 180.13 L 3.22 3.2 Z"],"p":[3.03,2.86,118.1,177.31,null]},
-    {"g":[-179,1150,186.41,128.24],"b":[0,0,0,"M 2.43 3.16 L 186.41 0 L 186.41 128.24 L 0 128.24 L 2.43 3.16 Z"],"p":[2.66,3.28,183.75,122.5,null]},
-    {"g":[495,970,162.78,108.44],"b":[0,0,0,"M 2.72 1.97 L 81.36 0 L 162.78 1.97 L 162.78 108.44 L 0 108.44 L 2.72 1.97 Z"],"p":[3.22,0,157.67,108.44,"M 2.64 1.97 L 78.81 0 L 157.67 1.97 L 157.67 108.44 L 0 108.44 L 2.64 1.97 Z"]},
-    {"g":[551,414,186.66,141.68],"b":[0,0,0,"M 0 0 L 123.56 3.06 L 186.66 1.76 L 186.66 141.68 L 2.04 141.68 L 0 0 Z"],"p":[0,0,184,138,"M 0 0 L 121.79 2.98 L 184 1.72 L 184 138 L 2.01 138 L 0 0 Z"]},
-    {"g":[-226,443,249.37,165.99],"b":[0,0,0,"M 0 0 L 193.92 3.33 L 247.29 7.82 L 249.37 165.99 L 0 162.47 L 0 80.23 L 0 0 Z"],"p":[0,0,249.37,163.97,"M 0 0 L 193.92 3.29 L 247.29 7.72 L 249.37 163.97 L 0 160.49 L 0 79.25 L 0 0 Z"]},
-    {"g":[-465,726,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
-    {"g":[658,1170,259.18,175.57],"b":[0,0,0,"M 2.05 2.02 L 259.18 0 L 259.18 175.57 L 0 175.57 L 2.05 2.02 Z"],"p":[2.1,0,257.07,172.29,null]},
-    {"g":[-629,1026,285.73,192.83],"b":[0,0,0,"M 0 0 L 285.73 0 L 285.73 192.83 L 3.28 188.12 L 0 0 Z"],"p":[3.25,0.16,282,189.5,null]},
-    {"g":[118,1173,374.5,263.43],"b":[0,0,0,"M 0 0 L 374.5 6.29 L 374.5 263.43 L 0 263.43 L 0 0 Z"],"p":[0,5.5,374.5,253.5,null]},
-    {"g":[-620,402,174.62,278.4],"b":[0,0,0,"M 4.58 0 L 78.25 0 L 169.8 0 L 174.62 278.4 L 4.58 278.4 L 0 193.69 L 4.58 0 Z"],"p":[0,0,171.34,275.09,"M 4.49 0 L 76.78 0 L 166.6 0 L 171.34 275.09 L 4.49 275.09 L 0 191.39 L 4.49 0 Z"]},
-    {"g":[583,625,310.6,209.48],"b":[0,0,0,"M 0 0 L 310.6 0 L 304.36 203.65 L 0 209.48 L 0 0 Z"],"p":[0,0,303.75,203.51,null]},
-    {"g":[811,221,374.5,263.43],"b":[0,0,0,"M 0 0 L 374.5 6.29 L 374.5 263.43 L 0 263.43 L 0 0 Z"],"p":[0,5.5,374.5,253.5,null]},
-    {"g":[1318,505,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
-    {"g":[409,181,249.37,165.99],"b":[0,0,0,"M 0 0 L 193.92 3.33 L 247.29 7.82 L 249.37 165.99 L 0 162.47 L 0 80.23 L 0 0 Z"],"p":[0,0,249.37,163.97,"M 0 0 L 193.92 3.29 L 247.29 7.72 L 249.37 163.97 L 0 160.49 L 0 79.25 L 0 0 Z"]},
-    {"g":[1201,825,174.62,278.4],"b":[0,0,0,"M 4.58 0 L 78.25 0 L 169.8 0 L 174.62 278.4 L 4.58 278.4 L 0 193.69 L 4.58 0 Z"],"p":[0,0,171.34,275.09,"M 4.49 0 L 76.78 0 L 166.6 0 L 171.34 275.09 L 4.49 275.09 L 0 191.39 L 4.49 0 Z"]},
-    {"g":[47,221,224.29,154.73],"b":[0.36,0,0,"M 0 0 L 223.93 0 L 223.93 154.73 L 0 154.73 Z"],"p":[0,4.28,224.29,150.09,null]},
-    {"g":[1045,613,186.41,128.24],"b":[0,0,0,"M 2.43 3.16 L 186.41 0 L 186.41 128.24 L 0 128.24 L 2.43 3.16 Z"],"p":[2.66,3.28,183.75,122.5,null]},
-    {"g":[1268,167,285.73,192.83],"b":[0,0,0,"M 0 0 L 285.73 0 L 285.73 192.83 L 3.28 188.12 L 0 0 Z"],"p":[3.25,0.16,282,189.5,null]},
-    {"g":[854,902,218.75,148.5],"b":[0,0,0,"M 0 0 L 216.07 1.47 L 218.75 148.5 L 0 148.5 L 0 0 Z"],"p":[0,1.72,215.75,142.95,null]},
-  ];
-  const SHIFT_X = 687, SHIFT_Y = -102; // frame coords -> tile coords
-  const TILE_W = 2300, TILE_H = 1400;  // repeat period (photos stay clear of the seams)
-
-  // The Figma layout repeated 2x2 so 80 different photos fit before anything repeats.
-  const COPIES_X = 2, COPIES_Y = 2;
-  const SUPER_W = TILE_W * COPIES_X, SUPER_H = TILE_H * COPIES_Y;
-  const SLOTS = [];
-  for (let cy = 0; cy < COPIES_Y; cy++) for (let cx = 0; cx < COPIES_X; cx++)
-    RAW.forEach((s) => SLOTS.push({ ...s, x: s.g[0] + SHIFT_X + cx * TILE_W, y: s.g[1] + SHIFT_Y + cy * TILE_H }));
+  // Layout from tools/build_layout.py: every photo once, at its real proportions,
+  // with even gaps and a hand-cut white backing. Phones get the same layout, smaller.
+  const LAYOUT = window.LAYOUT;
+  const scaleFor = () => (innerWidth < 700 ? 0.52 : 1);
+  let S = scaleFor();
+  let SUPER_W = LAYOUT.w * S, SUPER_H = LAYOUT.h * S;
   const PHOTOS = window.PHOTOS || [];
 
   const stage = document.getElementById("stage");
@@ -47,54 +20,41 @@
   // A PHOTOS entry is either "photos/x.webp" or { thumb, full, loop, video }:
   //   thumb: small image for the gallery    full: big image for the expanded view
   //   loop: short muted clip for the gallery    video: full clip (with sound) for the expanded view
-  const SLOT_MAP = window.SLOT_MAP || [];
-  const mediaIndex = (slot) => (SLOT_MAP.length ? SLOT_MAP[slot % SLOT_MAP.length] : slot) % PHOTOS.length;
   const norm = (m) => (typeof m === "string" ? { thumb: m, full: m } : m);
-  const media = (slot) => norm(PHOTOS[mediaIndex(slot)]);
   window.GALLERY_MEDIA = PHOTOS.map(norm); // each photo once, for the expanded view
 
   function buildTile() {
     const tile = document.createElement("div");
     tile.className = "tile";
-    SLOTS.forEach((s, i) => {
-      const [, , gw, gh] = s.g;
-      const [bx, by, brot, bpath] = s.b;
-      const [px, py, pw, ph, mask] = s.p;
-
+    LAYOUT.slots.forEach((s) => {
       const slot = document.createElement("div");
       slot.className = "photo";
-      Object.assign(slot.style, { left: s.x + "px", top: s.y + "px", width: gw + "px", height: gh + "px" });
+      slot.dataset.index = s.i;
+      // the box includes an 8px margin so the cut border and shadow aren't clipped (.photo uses paint containment)
+      const P = 8;
+      Object.assign(slot.style, { left: (s.x - P) * S + "px", top: (s.y - P) * S + "px", width: (s.w + 2 * P) * S + "px", height: (s.h + 2 * P) * S + "px" });
 
-      // white backing, cut by hand in Figma (Figma rotation is counter-clockwise)
-      const svg = svgEl("svg", { width: gw, height: gh, viewBox: `0 0 ${gw} ${gh}` });
-      svg.appendChild(svgEl("path", { d: bpath, fill: "rgba(20,40,90,0.13)", transform: `translate(${bx + 0.6} ${by + 1.4}) rotate(${-brot})` }));
-      svg.appendChild(svgEl("path", { d: bpath, fill: "#fff", transform: `translate(${bx} ${by}) rotate(${-brot})` }));
+      // white backing, cut by hand (uneven border, nudged corners) + a soft paper shadow
+      const svg = svgEl("svg", { width: (s.w + 2 * P) * S, height: (s.h + 2 * P) * S, viewBox: `${-P} ${-P} ${s.w + 2 * P} ${s.h + 2 * P}` });
+      svg.appendChild(svgEl("path", { d: s.cut, fill: "rgba(20,40,90,0.13)", transform: "translate(0.8 1.8)" }));
+      svg.appendChild(svgEl("path", { d: s.cut, fill: "#fff" }));
       slot.appendChild(svg);
 
-      // photo or looping clip, clipped to its own (sometimes uneven) shape
+      const m = norm(PHOTOS[s.i]);
       let el;
-      if (PHOTOS.length) {
-        const m = media(i);
-        slot.dataset.index = mediaIndex(i);
-        if (m.loop) {
-          el = document.createElement("video");
-          Object.assign(el, { src: m.loop, muted: true, loop: true, autoplay: true, playsInline: true, preload: "metadata" });
-          el.setAttribute("muted", ""); el.setAttribute("playsinline", "");
-          el.setAttribute("disablepictureinpicture", ""); el.setAttribute("disableremoteplayback", "");
-          el.controls = false;
-          if (m.thumb) el.poster = m.thumb;
-        } else {
-          el = document.createElement("img");
-          Object.assign(el, { src: m.thumb, alt: "", loading: "lazy", decoding: "async", draggable: false });
-        }
+      if (m.loop) {
+        el = document.createElement("video");
+        Object.assign(el, { src: m.loop, muted: true, loop: true, autoplay: true, playsInline: true, preload: "metadata" });
+        el.setAttribute("muted", ""); el.setAttribute("playsinline", "");
+        el.setAttribute("disablepictureinpicture", ""); el.setAttribute("disableremoteplayback", "");
+        el.controls = false;
+        if (m.thumb) el.poster = m.thumb;
       } else {
-        el = document.createElement("div");
-        el.className = "empty";
-        el.textContent = i + 1;
+        el = document.createElement("img");
+        Object.assign(el, { src: m.thumb, alt: "", loading: "lazy", decoding: "async", draggable: false });
       }
       el.classList.add("media");
-      Object.assign(el.style, { left: px + "px", top: py + "px", width: pw + "px", height: ph + "px" });
-      if (mask) el.style.clipPath = `path("${mask}")`;
+      Object.assign(el.style, { left: P * S + "px", top: P * S + "px", width: s.w * S + "px", height: s.h * S + "px" });
       slot.appendChild(el);
       tile.appendChild(slot);
     });
@@ -106,8 +66,11 @@
   function layoutTiles() {
     const c = Math.ceil(innerWidth / SUPER_W) + 1;
     const r = Math.ceil(innerHeight / SUPER_H) + 1;
-    if (c === cols && r === rows) return;
-    cols = c; rows = r;
+    const sc = scaleFor();
+    if (c === cols && r === rows && sc === S) return;
+    if (sc !== S) { ox = innerWidth / 2 + (ox - innerWidth / 2) * sc / S; oy = innerHeight / 2 + (oy - innerHeight / 2) * sc / S; }
+    S = sc; SUPER_W = LAYOUT.w * S; SUPER_H = LAYOUT.h * S;
+    cols = Math.ceil(innerWidth / SUPER_W) + 1; rows = Math.ceil(innerHeight / SUPER_H) + 1;
     plane.innerHTML = "";
     tiles = [];
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
@@ -118,11 +81,10 @@
     }
   }
 
-  // Start on the same view as the Figma frame, centred in the window.
-  let ox = -SHIFT_X + (innerWidth - 1440) / 2;
-  let oy = -SHIFT_Y + (innerHeight - 1024) / 2;
+  // Start with the headline's clear space in the middle of the window.
+  let ox = innerWidth / 2 - LAYOUT.start[0] * S;
+  let oy = innerHeight / 2 - LAYOUT.start[1] * S;
   let vx = 0, vy = 0;
-  const ox0 = ox, oy0 = oy;
   const headline = document.getElementById("headline");
 
   const mod = (a, n) => ((a % n) + n) % n;
@@ -132,7 +94,7 @@
     const y = mod(oy, SUPER_H) - SUPER_H;
     plane.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     // headline starts centred and then moves with the photos (it isn't repeated, so it doesn't come back)
-    if (headline) headline.style.transform = `translate(-50%, -50%) translate3d(${ox - ox0}px, ${oy - oy0}px, 0)`;
+    if (headline) headline.style.transform = `translate(-50%, -50%) translate3d(${ox + LAYOUT.start[0] * S - innerWidth / 2}px, ${oy + LAYOUT.start[1] * S - innerHeight / 2}px, 0)`;
     // paper moves with the photos, wrapped on its own tile size
     bg.style.transform = `translate3d(${mod(ox, BG_W) - BG_W}px, ${mod(oy, BG_H) - BG_H}px, 0)`;
   }
