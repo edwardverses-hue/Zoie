@@ -61,43 +61,94 @@
     return tile;
   }
 
-  // Enough tile copies to cover the screen at any offset.
-  let tiles = [], cols = 0, rows = 0;
+  // One finite map (like haneda-nice-day): built once, panned and zoomed as a whole.
+  let tiles = [];
   function layoutTiles() {
-    const c = Math.ceil(innerWidth / SUPER_W) + 1;
-    const r = Math.ceil(innerHeight / SUPER_H) + 1;
     const sc = scaleFor();
-    if (c === cols && r === rows && sc === S) return;
-    if (sc !== S) { ox = innerWidth / 2 + (ox - innerWidth / 2) * sc / S; oy = innerHeight / 2 + (oy - innerHeight / 2) * sc / S; }
+    if (tiles.length && sc === S) return;
+    if (tiles.length) { ox = innerWidth / 2 + (ox - innerWidth / 2) * sc / S; oy = innerHeight / 2 + (oy - innerHeight / 2) * sc / S; }
     S = sc; SUPER_W = LAYOUT.w * S; SUPER_H = LAYOUT.h * S;
-    cols = Math.ceil(innerWidth / SUPER_W) + 1; rows = Math.ceil(innerHeight / SUPER_H) + 1;
     plane.innerHTML = "";
-    tiles = [];
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      const t = buildTile();
-      t.style.transform = `translate(${i * SUPER_W}px, ${j * SUPER_H}px)`;
-      plane.appendChild(t);
-      tiles.push(t);
-    }
+    const t = buildTile();
+    plane.appendChild(t);
+    tiles = [t];
+    MiniMap.build();
   }
 
-  // Start with the headline's clear space in the middle of the window.
+  // Start with the headline in the middle of the window.
   let ox = innerWidth / 2 - LAYOUT.start[0] * S;
   let oy = innerHeight / 2 - LAYOUT.start[1] * S;
   let vx = 0, vy = 0;
+  let Z = 1;                         // 1 = close up; < 1 = zoomed out to the whole map
   const headline = document.getElementById("headline");
+
+  // keep the map on screen: can't drag past its edges; if it's smaller than the window, centre it
+  function clamp() {
+    const w = SUPER_W * Z, h = SUPER_H * Z;
+    const cx = w <= innerWidth ? (innerWidth - w) / 2 : Math.min(0, Math.max(innerWidth - w, ox));
+    const cy = h <= innerHeight ? (innerHeight - h) / 2 : Math.min(0, Math.max(innerHeight - h, oy));
+    if (cx !== ox) { ox = cx; vx = 0; }
+    if (cy !== oy) { oy = cy; vy = 0; }
+  }
 
   const mod = (a, n) => ((a % n) + n) % n;
   function render() {
-    // Wrap the offset so the plane never runs out.
-    const x = mod(ox, SUPER_W) - SUPER_W;
-    const y = mod(oy, SUPER_H) - SUPER_H;
-    plane.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-    // headline starts centred and then moves with the photos (it isn't repeated, so it doesn't come back)
-    if (headline) headline.style.transform = `translate(-50%, -50%) translate3d(${ox + LAYOUT.start[0] * S - innerWidth / 2}px, ${oy + LAYOUT.start[1] * S - innerHeight / 2}px, 0)`;
-    // paper moves with the photos, wrapped on its own tile size
+    plane.style.transform = `translate3d(${ox}px, ${oy}px, 0) scale(${Z})`;
+    // headline belongs to the map: it sits at the map's centre, moves and zooms with it
+    if (headline) headline.style.transform = `translate(-50%, -50%) translate3d(${ox + LAYOUT.start[0] * S * Z - innerWidth / 2}px, ${oy + LAYOUT.start[1] * S * Z - innerHeight / 2}px, 0) scale(${Z})`;
+    // paper moves with the photos
     bg.style.transform = `translate3d(${mod(ox, BG_W) - BG_W}px, ${mod(oy, BG_H) - BG_H}px, 0)`;
+    MiniMap.frame(ox, oy, Z);
   }
+
+  // ---- minimap (bottom right): every photo as a hatched block, the window as a frame ----
+  const MiniMap = (() => {
+    const box = document.getElementById("minimap");
+    const map = box.querySelector(".mm-map");
+    const frameEl = box.querySelector(".mm-frame");
+    let k = 1;
+    function build() {
+      const W = LAYOUT.w, H = LAYOUT.h, NS = "http://www.w3.org/2000/svg";
+      const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "xMidYMid meet" });
+      const defs = svgEl("defs", {});
+      const pat = svgEl("pattern", { id: "mm-hatch", patternUnits: "userSpaceOnUse", width: 60, height: 60, patternTransform: "rotate(35)" });
+      pat.appendChild(svgEl("line", { x1: 0, y1: 0, x2: 0, y2: 60, stroke: "#fff", "stroke-width": 34 }));
+      defs.appendChild(pat); svg.appendChild(defs);
+      LAYOUT.slots.forEach((s) => svg.appendChild(svgEl("rect", { x: s.x, y: s.y, width: s.w, height: s.h, fill: "url(#mm-hatch)" })));
+      map.innerHTML = ""; map.appendChild(svg);
+      map.style.aspectRatio = `${W} / ${H}`;
+    }
+    function frame(x, y, z) {
+      k = map.clientWidth / (SUPER_W * z);          // minimap px per screen px
+      const fx = -x * k, fy = -y * k, fw = innerWidth * k, fh = innerHeight * k;
+      frameEl.style.transform = `translate3d(${fx}px, ${fy}px, 0)`;
+      frameEl.style.width = fw + "px"; frameEl.style.height = fh + "px";
+    }
+    return { build, frame };
+  })();
+
+  // ---- zoom toggle: whole map <-> close up, keeping the middle of the screen in place ----
+  const zoomBtn = document.getElementById("zoom");
+  let zoomAnim = null;
+  function fitZ() { return Math.min((innerWidth - 80) / SUPER_W, (innerHeight - 140) / SUPER_H, 1); }
+  function zoomTo(z1) {
+    const z0 = Z, t0 = performance.now(), D = reduce ? 1 : 900;
+    // the map point under the middle of the screen stays put (zooming out ends centred on the map)
+    const mx = (innerWidth / 2 - ox) / Z, my = (innerHeight / 2 - oy) / Z;
+    const ex = z1 < z0 ? SUPER_W / 2 : mx, ey = z1 < z0 ? SUPER_H / 2 : my;
+    vx = vy = 0;
+    zoomAnim = (now) => {
+      const p = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - p, 4);
+      Z = z0 + (z1 - z0) * e;
+      const px = mx + (ex - mx) * e, py = my + (ey - my) * e;
+      ox = innerWidth / 2 - px * Z; oy = innerHeight / 2 - py * Z;
+      if (p >= 1) zoomAnim = null;
+    };
+    zoomBtn.dataset.zoom = z1 < 1 ? "out" : "in";
+    document.body.classList.toggle("zoomed-out", z1 < 1);
+  }
+  zoomBtn.addEventListener("click", (e) => { e.stopPropagation(); zoomTo(Z < 1 ? 1 : fitZ()); hint.classList.add("gone"); });
+  zoomBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
 
   // ---- input: keychain first, otherwise pan ----
   let mode = null, lastX = 0, lastY = 0, lastT = 0, moved = 0, downSlot = null;
@@ -165,17 +216,19 @@
   });
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let drawnX = NaN, drawnY = NaN;
+  let drawnX = NaN, drawnY = NaN, drawnZ = NaN;
   function frame() {
     if (document.body.classList.contains("birthday")) { requestAnimationFrame(frame); return; }
-    if (mode !== "pan") {
+    if (zoomAnim) zoomAnim(performance.now());
+    else if (mode !== "pan") {
       ox += vx; oy += vy;
       const f = reduce ? 0.6 : 0.94; // glide after letting go
       vx *= f; vy *= f;
       if (Math.abs(vx) < 0.05) vx = 0;
       if (Math.abs(vy) < 0.05) vy = 0;
     }
-    if (ox !== drawnX || oy !== drawnY) { render(); drawnX = ox; drawnY = oy; }
+    if (!zoomAnim) clamp();
+    if (ox !== drawnX || oy !== drawnY || Z !== drawnZ) { render(); drawnX = ox; drawnY = oy; drawnZ = Z; }
     requestAnimationFrame(frame);
   }
 
@@ -196,7 +249,7 @@
   ["pointerdown", "touchstart", "keydown"].forEach((t) => addEventListener(t, playAll, { passive: true }));
   new MutationObserver(playAll).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
-  addEventListener("resize", () => { layoutTiles(); watch(); });
+  addEventListener("resize", () => { layoutTiles(); if (Z < 1) Z = fitZ(); drawnZ = NaN; watch(); });
   layoutTiles();
   watch();
   requestAnimationFrame(frame);

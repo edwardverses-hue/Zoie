@@ -313,3 +313,54 @@ body.birthday #plane { visibility: hidden; }
 
 #headline { will-change: transform; }
 #headline .hl-space { width: 0.38em; background: transparent; box-shadow: none; padding: 0; }
+
+/* ---- minimap + zoom (after tokyo-haneda.com/haneda-nice-day) ---- */
+#plane { transform-origin: 0 0; }
+#minimap {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 220px;
+  z-index: 5;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.5s ease;
+}
+#minimap .mm-map { position: relative; width: 100%; }
+#minimap .mm-map svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#minimap .mm-frame {
+  position: absolute;
+  left: 0; top: 0;
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+#zoom {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 28px; height: 28px;
+  margin: 0; padding: 0;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: #8fb0ea;
+  z-index: 6;
+  transition: opacity 0.5s ease;
+}
+#zoom::before, #zoom::after { content: ""; position: absolute; width: 6px; height: 6px; transition: transform 0.4s ease; }
+#zoom::before { top: 4px; right: 4px; border-top: 2px solid #fff; border-right: 2px solid #fff; border-top-right-radius: 2px; }
+#zoom::after  { bottom: 4px; left: 4px; border-bottom: 2px solid #fff; border-left: 2px solid #fff; border-bottom-left-radius: 2px; }
+#zoom[data-zoom="out"]::before, #zoom[data-zoom="out"]::after { transform: rotate(180deg); }
+/* the map sits up and left of the button, like the reference */
+#minimap { right: 64px; bottom: 56px; }
+body.birthday #minimap, body.birthday #zoom, body.intro #minimap, body.intro #zoom, body.viewing #minimap, body.viewing #zoom { opacity: 0; pointer-events: none; }
+body.zoomed-out #hint { opacity: 0; }
+@media (max-width: 720px) {
+  #minimap { width: 150px; right: 16px; bottom: 16px; }
+}
+/* touch screens: no zoom button (as on the reference) */
+@media not all and (hover: hover) and (pointer: fine) {
+  #zoom { display: none; }
+  #minimap { right: 16px; bottom: 16px; }
+}

@@ -34,6 +34,13 @@
 
   <p id="hint">drag anywhere</p>
 
+  <!-- map of the whole gallery, after haneda-nice-day: hatched blocks = photos, frame = what's on screen -->
+  <div id="minimap" aria-hidden="true">
+    <div class="mm-map"></div>
+    <div class="mm-frame"></div>
+  </div>
+  <button id="zoom" type="button" data-zoom="in" aria-label="Zoom out to the whole gallery"></button>
+
   <div id="viewer" role="dialog" aria-modal="true" aria-label="Photo">
     <figure></figure>
     <button class="vbtn close" type="button">close</button>
