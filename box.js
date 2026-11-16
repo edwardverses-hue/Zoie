@@ -438,7 +438,7 @@ function frame(now) {
   const st = state;
 
   // idle: a slow turn so the box reads as an object, like the reel's first beats
-  if (st.stage === "wrap" || st.stage === "wrapping-off") {
+  if (st.stage === "wrap" || st.stage === "wrapping-off" || (st.stage === "tab" && st.tearTarget === 0)) {
     st.idle += dt;
     st.root.rotation.y = Math.sin(st.idle * 0.6) * 0.12;
   }
@@ -531,9 +531,11 @@ window.BlindBox = {
     canvas.style.display = "block"; canvas.classList.remove("gone");
     resize();
     const b = makeBox();
-    state = Object.assign(b, { stage: "wrap", idle: 0, tear: 0, tearTarget: 0, wiggle: 0, rubbed: 0, wrapLeft: 1, done: false });
+    // no shrink-wrap step (Edward's call): the box starts bare, straight to the tab
+    b.wrap.visible = b.wrapTop.visible = false;
+    state = Object.assign(b, { stage: "tab", idle: 0, tear: 0, tearTarget: 0, wiggle: 0, rubbed: 0, wrapLeft: 0, done: false });
     document.body.classList.add("boxing");
-    hint("remove all the plastic");
+    hint("drag and pull the tab");
     if (!raf) raf = requestAnimationFrame(frame);
     if (reduce) finish(false);
   },
