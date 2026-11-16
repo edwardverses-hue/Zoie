@@ -433,7 +433,7 @@ header a .ink path { stroke: #1d2a44; }
 
 /* ---- blind-box opening (box.js) ---- */
 #blindbox { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 6; display: none; touch-action: none; transition: opacity 0.45s ease 0.12s; }
-#blindbox.gone { opacity: 0; pointer-events: none; }
+#blindbox.gone { opacity: 0; pointer-events: none; transition: none; }   /* hard cut, like hakusuku */
 body.boxing header, body.boxing #minimap, body.boxing #zoom, body.boxing #hint { opacity: 0 !important; pointer-events: none; }
 #bb-hint {
   position: fixed; left: 50%; bottom: max(9vh, 64px); z-index: 7; margin: 0;

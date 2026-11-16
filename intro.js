@@ -129,15 +129,15 @@
     body.classList.remove("intro");
     requestAnimationFrame(() => requestAnimationFrame(() => { plane.style.transition = ""; }));
     const cx = innerWidth / 2, cy = innerHeight / 2;
+    // hakusuku's burst: every photo starts bunched near the centre at full size and
+    // springs out to its place in ~0.27 s (no fade, no scaling). Each keeps its tilt.
     document.querySelectorAll("#plane .photo").forEach((el) => {
       const r = el.getBoundingClientRect();
-      if (r.right < 0 || r.left > innerWidth || r.bottom < 0 || r.top > innerHeight) return;   // only what's on screen: fewer layers to composite
+      if (r.right < -300 || r.left > innerWidth + 300 || r.bottom < -300 || r.top > innerHeight + 300) return;
       const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
-      const rest = el.style.transform || "";          // the photo's own tilt
-      el.animate([{ transform: `translate(${dx * 0.8}px, ${dy * 0.8}px) ${rest} scale(0.9)`, opacity: 0 },
-                  { opacity: 1, offset: 0.25 },
-                  { transform: rest || "none", opacity: 1 }],
-        { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" });
+      const rest = el.style.transform || "";
+      el.animate([{ transform: `translate(${dx * 0.8}px, ${dy * 0.8}px) ${rest}` }, { transform: rest || "none" }],
+        { duration: 270, easing: "cubic-bezier(.22,1,.36,1)" });
     });
     later(600, () => showHeadline(false));
   }
