@@ -246,7 +246,9 @@
   // their still frame, then start on her first touch anywhere.
   const loops = () => plane.querySelectorAll("video");
   const onScreen = new Set();
-  const allowed = () => !document.body.classList.contains("birthday") && !document.body.classList.contains("viewing");
+  let settledAt = 0;
+  const allowed = () => { const c = document.body.classList;
+    return !c.contains("birthday") && !c.contains("viewing") && !c.contains("intro") && !c.contains("boxing") && performance.now() > settledAt; };
   const sync = (v) => {
     if (onScreen.has(v) && allowed()) { const p = v.play(); if (p) p.catch(() => {}); }
     else if (!v.paused) v.pause();
@@ -257,7 +259,12 @@
   const watch = () => { io.disconnect(); onScreen.clear(); loops().forEach((v) => { v.pause(); io.observe(v); }); };
   const playAll = () => loops().forEach(sync);
   ["pointerdown", "touchstart", "keydown"].forEach((t) => addEventListener(t, playAll, { passive: true }));
-  new MutationObserver(playAll).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  let wasIntro = true;
+  new MutationObserver(() => {
+    const intro = document.body.classList.contains("intro");
+    if (wasIntro && !intro) { settledAt = performance.now() + 1100; setTimeout(playAll, 1150); }   // after the burst
+    wasIntro = intro; playAll();
+  }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
   addEventListener("resize", () => { layoutTiles(); if (Z < 1) Z = fitZ(); drawnZ = NaN; watch(); });
   layoutTiles();

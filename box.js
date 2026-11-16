@@ -144,7 +144,8 @@ function setup() {
   canvas.id = "blindbox";
   document.body.appendChild(canvas);
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const small = Math.min(innerWidth, innerHeight) < 600;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.5 : 2));   // phones: less to draw per frame
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -165,7 +166,7 @@ function setup() {
   scene.add(new THREE.HemisphereLight(0xffffff, 0x8fb0ea, 0.55));
   const key = new THREE.DirectionalLight(0xfff1dd, 2.4);
   key.position.set(4.2, 6.5, 4.6); key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024); key.shadow.radius = 6; key.shadow.bias = -0.0005;
+  key.shadow.mapSize.set(small ? 512 : 1024, small ? 512 : 1024); key.shadow.radius = 6; key.shadow.bias = -0.0005;
   Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: 1, far: 16 });
   scene.add(key);
   const fill = new THREE.DirectionalLight(0xdbe6ff, 0.45); fill.position.set(-5, 2.5, 1.5); scene.add(fill);
@@ -406,12 +407,14 @@ let preload = [];
 function preloadCards() {
   const items = (window.GALLERY_MEDIA || []).filter((m) => m.thumb && !m.loop);
   const loader = new THREE.TextureLoader();
-  preload = items.slice().sort(() => Math.random() - 0.5).slice(0, 16).map((m) => {
-    const t = loader.load(m.thumb); t.colorSpace = THREE.SRGBColorSpace; return t;
+  preload = items.slice().sort(() => Math.random() - 0.5).slice(0, 14).map((m) => {
+    const t = loader.load(m.thumb, (tx) => { if (renderer) renderer.initTexture(tx); });   // GPU upload now, not mid-burst
+    t.colorSpace = THREE.SRGBColorSpace; return t;
   });
 }
 
 function photoBurst() {
+  if (state.cards) return;
   const ready = preload.filter((t) => t.image && t.image.width);
   state.cards = ready.map((t, i) => {
     const pick = ready;
@@ -420,7 +423,7 @@ function photoBurst() {
     const ph = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: t }));
     ph.position.z = 0.002; card.add(back, ph);
     const holder = new THREE.Group(); holder.add(card);
-    holder.position.set(0, HB * 0.5, 0); holder.scale.setScalar(0.001);
+    holder.position.set(0, HB * 0.5, 0); holder.scale.setScalar(0.001); holder.visible = false;
     const a = (i / ready.length) * Math.PI * 2 + Math.random() * 0.4;
     holder.userData = {
       to: new THREE.Vector3(Math.cos(a) * (1.6 + Math.random() * 2.2), HB * 0.62 + Math.sin(a) * (1.2 + Math.random() * 1.4), 2.6 + Math.random() * 2.6),
@@ -455,6 +458,7 @@ function frame(now) {
     st.wiggle *= 0.9;
     const base = Math.sin(st.idle * 0.6) * 0.12;
     st.root.rotation.y = base * (1 - Math.min(1, st.tear * 8)) + st.tear * Math.PI * 2;
+    if (st.tear > 0.15 && !st.cards) { photoBurst(); st.cards.forEach((c) => (c.visible = true)); renderer.compile(scene, camera); st.cards.forEach((c) => (c.visible = false)); }
     if (st.tear > 0.985) { st.tear = 1; st.stage = "strip-off"; st.stripT = 0; st.ribbonDrop = 0; }
   }
   if (st.stage === "tab" || st.stage === "wrap" || st.stage === "wrapping-off") buildRibbon(st);
@@ -480,7 +484,7 @@ function frame(now) {
       const pt = Math.min(1, Math.max(0, t - 0.75 - k * 0.025) / 0.62);
       p.rotation.x = bounce(pt) * (Math.PI / 2 - 0.004);
     });
-    if (t > 0.85 && !st.cards) photoBurst();
+    if (!st.cards) photoBurst();
     if (st.cards) {
       st.cards.forEach((c) => {
         const u = c.userData, ct = Math.min(1, Math.max(0, t - 1.05 - u.delay) / 0.75), e = ease(ct);
