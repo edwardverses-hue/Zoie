@@ -12,7 +12,6 @@
     if (window.Keychain) window.Keychain.reset();
     first = false;
   }
-  // opening "our gallery" (from the keychain, or clicking it again) replays the opening
   // ink loops: the stroke isn't scaled with the stretched SVG, so measure each loop's
   // real on-screen length for the draw-in dash
   const measureInk = () => document.querySelectorAll("header .ink path").forEach((p) => {
@@ -27,9 +26,8 @@
   });
   measureInk(); addEventListener("resize", measureInk);
   if (document.fonts) document.fonts.ready.then(measureInk);
-  addEventListener("hashchange", () => { show(); if (location.hash !== "#birthday" && window.Intro) window.Intro.play(); });
-  document.querySelector('header a[data-view="gallery"]').addEventListener("click", () => {
-    if (location.hash === "#gallery" && window.Intro) window.Intro.play();   // same hash: no hashchange fires
-  });
+  // the blind box opening plays once, when she first enters the site (intro.js); switching
+  // views afterwards just shows the gallery as it is
+  addEventListener("hashchange", show);
   show();
 })();

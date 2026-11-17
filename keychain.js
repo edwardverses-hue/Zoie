@@ -13,8 +13,7 @@
 // On phones, touching or sliding a finger across the strips does the same.
 (() => {
   // Back to front. amp: idle sway degrees. order: left-to-right strip position.
-  // PLACEHOLDERS: the padlock and charms 02-05 are wildyriftian.com's own art,
-  // standing in until Edward's charms are cut out. Swap each file before sharing.
+  // The padlock is still wildyriftian.com's art; the charms are Edward's.
   const LAYERS = [
     // padlock first = behind everything (as on wildyriftian.com): the split rings cross over
     // its ring, so they read as threaded through it
@@ -24,7 +23,7 @@
     { src: "keychain/03gwen.webp", amp: 2, order: 3, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
     { src: "keychain/01suki.webp", amp: 3, order: 0, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
   ];
-  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04livingwild.webp": [49.583, 32.167, 32.917, 51.25], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04livingwild.webp": [51.25, 32.417, 31.25, 51.0], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
   // Motion measured from wildyriftian.com (headless Chrome, 1440x900, every frame):
   //  idle  - one shared cosine phase p (period 3.52 s): padlock moves down 4px*p; each
   //          charm moves down 4px*p, sideways -amp*p px and rotates amp*p deg (px at a 720px box)

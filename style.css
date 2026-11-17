@@ -289,7 +289,7 @@ header { z-index: 8; }
 #keychain { z-index: 3; }
 .kc-strips { position: absolute; left: 20%; top: 36.9%; width: 60%; height: 62.5%; display: flex; pointer-events: none; }
 body.birthday .kc-strips { pointer-events: auto; }
-.kc-strips span { flex: 1; touch-action: none; }
+.kc-strips span { flex: 1; touch-action: none; cursor: pointer; }   /* their strips are links: pointer cursor */
 
 /* header: strict 3-column grid so the date sits exactly on the centre line (over the keychain) */
 header {

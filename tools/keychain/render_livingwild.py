@@ -22,7 +22,7 @@ pad = Image.new('RGBA', (fig.width * 3, fig.height * 3), (0, 0, 0, 0)); ox, oy =
 pad.alpha_composite(fig, (ox, oy))
 pad = pad.rotate(ROT, resample=Image.BICUBIC, center=(ox + eye_x, oy + top))
 out = Image.new('RGBA', (CAN, CAN), (0, 0, 0, 0))
-out.alpha_composite(ring_layer((600, 412), (X, TOP_Y + 4), SS, CAN))     # ring first, figure covers its end
+out.alpha_composite(ring_layer((620, 413), (X, TOP_Y + 4), SS, CAN))     # ring first, figure covers its end
 out.alpha_composite(pad, (int(X * SS - ox - eye_x), int(TOP_Y * SS - oy - top)))
 out.resize((1200, 1200), Image.LANCZOS).save('/tmp/04livingwild.png')
 print('ok')
