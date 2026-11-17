@@ -13,7 +13,6 @@ F = lambda w, n: ImageFont.truetype(os.path.join(HERE, f"jost-{w}.ttf"), n)
 BASE = (246, 245, 241)       # white board (slightly warm, as printed card stock reads)
 INK = (31, 32, 32)            # near-black, the same ink as the title
 FW, FH = 1300, 2000
-N_PHOTOS, N_CLIPS = 56, 9     # from photos.js: 65 pieces, 9 of them loops
 
 def paper(w, h, seed):
     r = np.random.default_rng(seed)
@@ -37,19 +36,20 @@ def arc(d, cx, cy, w, sag, lw=3):
 
 def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
-    tracked(d, FW / 2, FH * 0.16, "Photographs inside.", F("400-italic", 46), 9)
+    tracked(d, FW / 2, FH * 0.16, "A blind box.", F("400-italic", 46), 9)
     tracked(d, FW / 2, FH * 0.33, "Zoie", F("300-normal", 250), 120)
     arc(d, FW / 2, FH * 0.40, FW * 0.62, 26)
     tracked(d, FW / 2, FH * 0.53, "Birthday edition", F("400-normal", 50), 14)
     tracked(d, FW / 2, FH * 0.585, "11.17.2026", F("400-normal", 50), 22)
     tracked(d, FW / 2, FH * 0.66, "Made by Edward.", F("400-normal", 42), 12)
     # contents table
-    x0, x1, y = FW * 0.12, FW * 0.88, FH * 0.735
+    x0, x1, y = FW * 0.12, FW * 0.88, FH * 0.775
     sm, smb = F("400-normal", 34), F("500-normal", 34)
     d.line([(x0, y), (x1, y)], fill=INK, width=4); y += 52
-    d.text((x0, y), "Contents", font=smb, fill=INK, anchor="ls"); d.text((x1, y), "per box", font=sm, fill=INK, anchor="rs"); y += 22
+    d.text((x0, y), "Details", font=smb, fill=INK, anchor="ls"); y += 22
     d.line([(x0, y), (x1, y)], fill=INK, width=2)
-    for k, v in [("Photographs", str(N_PHOTOS)), ("Moving clips", str(N_CLIPS)), ("Pieces in total", str(N_PHOTOS + N_CLIPS)), ("Opened", "once")]:
+    # nothing here says what's inside: it's a blind box
+    for k, v in [("Edition", "1 of 1"), ("Opened", "not yet")]:
         y += 54; d.text((x0, y), k, font=sm, fill=INK, anchor="ls"); d.text((x1, y), v, font=sm, fill=INK, anchor="rs")
         y += 20; d.line([(x0, y), (x1, y)], fill=INK, width=1)
     d.line([(x0, y + 6), (x1, y + 6)], fill=INK, width=4)
@@ -65,7 +65,6 @@ def left():
     tracked(d, FW / 2, FH * 0.47, "For Zoie,", F("400-normal", 54), 10)
     tracked(d, FW / 2, FH * 0.47 + 78, "from Edward.", F("400-normal", 54), 10)
     vertical(im, FW * 0.92, FH * 0.18, "11.17.2026", F("400-normal", 34), 10, -90)
-    vertical(im, FW * 0.92, FH * 0.86, "1 / 1", F("400-normal", 34), 10, -90)
     return im
 
 def right():
@@ -74,8 +73,8 @@ def right():
     tracked(d, x0, FH * 0.16, "Zoie", F("300-normal", 110), 52, anchor="l")
     tracked(d, x0, FH * 0.16 + 62, "Birthday edition", F("400-normal", 30), 9, anchor="l")
     body = F("400-normal", 40)
-    lines = [f"{N_PHOTOS} photographs and", f"{N_CLIPS} short clips, packed", "in one bag.", "",
-             "Nobody sees which", "come out first until", "the bag is torn open."]
+    lines = ["Inside is one", "sealed bag.", "",
+             "What's in it stays", "hidden until the bag", "is torn open."]
     y = FH * 0.33
     for t in lines: d.text((x0, y), t, font=body, fill=INK, anchor="ls"); y += 62
     d.line([(FW * 0.52, FH * 0.86), (FW * 0.66, FH * 0.86)], fill=INK, width=2)
@@ -90,7 +89,7 @@ def back():
     im = paper(FW, FH, 4); d = ImageDraw.Draw(im)
     tracked(d, FW / 2, FH * 0.12, "How to open", F("500-normal", 46), 12)
     arc(d, FW / 2, FH * 0.16, FW * 0.5, 18, 2)
-    steps = [("Lift the lid", "Drag up on the box."), ("Pull out the bag", "Keep dragging up."), ("Tear the top", "The photos come out.")]
+    steps = [("Lift the lid", "Drag up on the box."), ("Pull out the bag", "Keep dragging up."), ("Tear the top", "See what's inside.")]
     for i, (a, b) in enumerate(steps):
         y = FH * (0.28 + i * 0.17)
         circled(d, FW / 2, y, i + 1)
