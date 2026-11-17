@@ -65,7 +65,7 @@ html, body {
   opacity: 0 !important;
 }
 .photo .empty {
-  background: #b9cdf5;
+  background: #d4d4d2;
   display: grid;
   place-items: center;
   color: #fff;
@@ -79,7 +79,7 @@ html, body {
   z-index: 10;
   display: grid;
   place-items: center;
-  background: rgba(70, 105, 190, 0.55);
+  background: rgba(24, 24, 24, 0.55);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   opacity: 0;
@@ -94,7 +94,7 @@ body.viewing #viewer { opacity: 1; pointer-events: auto; }
   padding: 7px 10px 9px 7px;      /* uneven on purpose, like the cut frames */
   transform: rotate(-0.4deg) scale(0.96);
   transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
-  box-shadow: 0 10px 40px rgba(20, 40, 90, 0.35);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
   line-height: 0;
 }
 body.viewing #viewer figure { transform: rotate(-0.4deg) scale(1); }
@@ -197,7 +197,7 @@ html.heart-cursor, html.heart-cursor * { cursor: none !important; }
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
-  filter: drop-shadow(0 1px 2px rgba(20, 40, 90, 0.35));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 #cursor.on { opacity: 1; }
 #cursor .heart {
@@ -235,7 +235,7 @@ body.intro #hint { opacity: 0; }
   background: #fff center / cover no-repeat;
   background-clip: content-box;
   padding: 4px 5px 5px 4px;          /* uneven white border like the cut frames */
-  box-shadow: 0 1px 3px rgba(20, 40, 90, 0.22);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
 }
 #intro .ix img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
@@ -255,14 +255,14 @@ body.birthday #headline, body.viewing #headline { opacity: 0; }
 #headline .hl-line {
   display: flex;
   align-items: center;
-  filter: drop-shadow(0 1px 1.5px rgba(20, 40, 90, 0.22));
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.22));
   transform: translateY(-0.55em);
 }
 #headline .hl-line.down { transform: none; transition: transform 0.3s cubic-bezier(.22,1,.36,1); }
 #headline span {
   display: inline-block;
   font: 66px/1 "Reenie Beanie", cursive;
-  color: #1d2a44;
+  color: #1f2020;
   background: #fbfaf6;
   padding: 0.16em 0.1em 0.06em;
   margin: 0 -0.02em;
@@ -363,7 +363,7 @@ body.birthday #plane { visibility: hidden; }
   margin: 0; padding: 0;
   border: 2px solid #fff;
   border-radius: 4px;
-  background: #8fb0ea;
+  background: #1f2020;
   z-index: 6;
   transition: opacity 0.5s ease;
 }
@@ -386,8 +386,8 @@ body.zoomed-out #hint { opacity: 0; }
 
 /* ---- phones: audit fixes ---- */
 /* header stays readable over bright photos */
-header { text-shadow: 0 1px 6px rgba(22, 44, 96, 0.42); }
-header a .ink { filter: drop-shadow(0 1px 3px rgba(22, 44, 96, 0.38)); }
+header { text-shadow: 0 1px 6px rgba(0, 0, 0, 0.42); }
+header a .ink { filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.38)); }
 /* the photo viewer has its own close button: hide the header under it */
 body.viewing header { opacity: 0; pointer-events: none; }
 header { transition: opacity 0.25s; }
@@ -408,18 +408,18 @@ header { display: flex !important; justify-content: flex-start !important; align
 header > * { justify-self: auto !important; margin: 0 !important; }
 header a, header a:hover { opacity: 1; }
 header a {
-  position: relative; padding: 0.12em 0.32em 0.02em; color: #1d2a44; isolation: isolate;
+  position: relative; padding: 0.12em 0.32em 0.02em; color: #1f2020; isolation: isolate;
   transform: rotate(-2deg);
 }
 header a[data-view="birthday"] { transform: rotate(1.5deg); }
 header a::before {
   content: ""; position: absolute; inset: 0; z-index: -1; background: #fbfaf6;
   clip-path: polygon(2% 9%, 48% 0, 98% 6%, 100% 93%, 55% 100%, 1% 95%);
-  filter: drop-shadow(0 1px 1px rgba(22, 44, 96, 0.25));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
 }
 header a[data-view="birthday"]::before { clip-path: polygon(1% 4%, 52% 7%, 99% 0, 97% 96%, 46% 92%, 3% 100%); }
 header a .ink { left: -0.45em; top: -0.32em; width: calc(100% + 0.9em); height: calc(100% + 0.64em); filter: none; }
-header a .ink path { stroke: #1d2a44; }
+header a .ink path { stroke: #1f2020; }
 @media (max-width: 720px) {
   header a .ink { left: -0.45em; top: -0.32em; width: calc(100% + 0.9em); height: calc(100% + 0.64em); }
 }
@@ -430,7 +430,7 @@ header a .ink path { stroke: #1d2a44; }
   font: 32px/1 "Reenie Beanie", cursive;
   letter-spacing: 0.06em;
   color: #fff;
-  text-shadow: 0 1px 4px rgba(22, 44, 96, 0.4);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.6s ease, transform 0.6s ease;
@@ -446,7 +446,7 @@ body.boxing header, body.boxing #minimap, body.boxing #zoom, body.boxing #hint {
 #bb-hint {
   position: fixed; left: 50%; bottom: max(9vh, 64px); z-index: 7; margin: 0;
   transform: translateX(-50%) rotate(-1.5deg) translateY(6px);
-  font: 30px/1 "Reenie Beanie", cursive; color: #1d2a44;
+  font: 30px/1 "Reenie Beanie", cursive; color: #1f2020;
   background: #fbfaf6; padding: 0.16em 0.4em 0.04em;
   clip-path: polygon(2% 9%, 48% 0, 98% 6%, 100% 93%, 55% 100%, 1% 95%);
   opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; white-space: nowrap;
