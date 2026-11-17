@@ -13,7 +13,7 @@
 // Plays on load and every time "our gallery" is opened. Tap/drag/key skips to the end.
 (() => {
   // EDIT: the headline lines.
-  const HEADLINE = ["happy birthday,", "zoie."];
+  const HEADLINE = ["happy birthday", "baby!!"];
 
   const body = document.body;
   const headline = document.getElementById("headline");

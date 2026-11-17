@@ -10,6 +10,8 @@
     hint.textContent = view === "birthday" ? "" : "drag anywhere";
     if (!first) hint.classList.remove("gone");
     if (window.Keychain) window.Keychain.reset();
+    // the gallery always opens centred on the headline, wherever she'd dragged it before
+    if (view === "gallery" && window.Gallery) window.Gallery.reset();
     first = false;
   }
   // ink loops: the stroke isn't scaled with the stretched SVG, so measure each loop's
@@ -29,5 +31,9 @@
   // the blind box opening plays once, when she first enters the site (intro.js); switching
   // views afterwards just shows the gallery as it is
   addEventListener("hashchange", show);
+  // clicking "our gallery" while already on it re-centres it too (same hash: no hashchange)
+  document.querySelector('header a[data-view="gallery"]').addEventListener("click", () => {
+    if (location.hash !== "#birthday" && window.Gallery) window.Gallery.reset();
+  });
   show();
 })();
