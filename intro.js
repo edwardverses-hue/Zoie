@@ -13,7 +13,8 @@
 // Plays on load and every time "our gallery" is opened. Tap/drag/key skips to the end.
 (() => {
   // EDIT: the headline lines.
-  const HEADLINE = ["happy birthday", "baby!!"];
+  // one line, as on hakusuku.jp/recruit ("汗かいて、"); scraps: punctuation shares its glyph's scrap
+  const HEADLINE = [["生", "日", "快", "乐，"], ["宝", "贝！"]];   // two lines, like their "汗かいて、/心を動かす。"
 
   const body = document.body;
   const headline = document.getElementById("headline");
@@ -21,31 +22,38 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const rnd = (a, b) => a + Math.random() * (b - a);
 
-  // ---- headline: one paper scrap per letter ----
+  // ---- headline, measured on hakusuku.jp/recruit's hero (2560 px video): every glyph on its
+  // own white hand-cut scrap (corners chopped off at random, a few px uneven), scraps a bit
+  // rotated and set up or down a little; all of them on one long cream strip (244,239,231)
+  // that starts behind the first scrap and runs on past the last.
   const scrap = () => {
-    // torn edge: 4 corners nudged + a couple of extra points along top and bottom
-    const j = () => rnd(0, 7).toFixed(1);
-    return `polygon(${j()}% ${j()}%, ${rnd(35, 60).toFixed(0)}% ${j()}%, ${100 - j()}% ${j()}%, ${100 - j()}% ${100 - j()}%, ${rnd(35, 60).toFixed(0)}% ${100 - j()}%, ${j()}% ${100 - j()}%)`;
+    const c = (x, y, dx, dy) => rnd(0, 1) < 0.5
+      ? [`${x + dx * rnd(8, 20)}% ${y}%`, `${x}% ${y + dy * rnd(8, 20)}%`]       // chopped corner
+      : [`${x + dx * rnd(0, 4)}% ${y + dy * rnd(0, 4)}%`];
+    const tl = c(0, 0, 1, 1), tr = c(100, 0, -1, 1), br = c(100, 100, -1, -1), bl = c(0, 100, 1, -1);
+    return `polygon(${[...tl, ...tr.reverse(), ...br, ...bl.reverse()].join(",")})`;
   };
-  const lines = HEADLINE.map((text, li) => {
+  const lines = HEADLINE.map((groups, li) => {
     const strip = document.createElement("div");
     strip.className = "hl-line";
-    const chars = [...text].map((ch, ci) => {
+    const paper = document.createElement("i");
+    paper.className = "hl-strip";
+    const j = () => rnd(0, 4).toFixed(1);
+    paper.style.clipPath = `polygon(0% ${j()}%, 100% ${j()}%, ${100 - rnd(0, 2)}% ${100 - j()}%, ${rnd(0, 3)}% 100%)`;
+    strip.appendChild(paper);
+    const chars = groups.map((g) => {
       const s = document.createElement("span");
-      s.textContent = ch === " " ? " " : ch;
-      if (ch === " ") s.className = "hl-space";
-      else s.style.clipPath = scrap();
+      s.textContent = g;
+      s.style.clipPath = scrap();
+      s.dataset.rest = `translateY(${rnd(-0.06, 0.12).toFixed(2)}em) rotate(${rnd(-4, 4).toFixed(1)}deg)`;
+      s.style.transform = s.dataset.rest;
       strip.appendChild(s);
       return s;
     });
     return { strip, chars, last: li === HEADLINE.length - 1 };
   });
   lines.forEach((l) => headline.appendChild(l.strip));
-  // the date: a small stamp under the name (not in the header; see header notes in style.css)
-  const stamp = document.createElement("div");
-  stamp.className = "hl-date";
-  stamp.textContent = "11.17.2026";
-  headline.appendChild(stamp);
+  const stamp = document.createElement("div");      // (no date under the title: the reference has none)
   const allChars = lines.flatMap((l) => l.chars);
 
   const timers = [];
@@ -55,7 +63,7 @@
   function resetHeadline() {
     headline.classList.remove("on");
     lines.forEach((l) => { l.strip.classList.remove("down"); });
-    allChars.forEach((c) => { c.classList.remove("in", "set", "fly"); c.style.transform = ""; });
+    allChars.forEach((c) => { c.classList.remove("in", "set", "fly"); c.style.transform = c.dataset.rest || ""; });
     stamp.classList.remove("in");
   }
   function jumble(c) {
@@ -63,7 +71,7 @@
   }
   function showHeadline(instant) {
     headline.classList.add("on");
-    if (instant) { allChars.forEach((c) => { c.classList.add("in", "set"); c.style.transform = ""; }); lines.forEach((l) => l.strip.classList.add("down")); stamp.classList.add("in"); return; }
+    if (instant) { allChars.forEach((c) => { c.classList.add("in", "set"); c.style.transform = c.dataset.rest || ""; }); lines.forEach((l) => l.strip.classList.add("down")); stamp.classList.add("in"); return; }
     later(lines.length * 470 + 1150, () => stamp.classList.add("in"));   // after the last letter settles
     lines.forEach((l, li) => {
       const t = li * 470;                                       // line 2 starts 0.47 s after line 1
@@ -72,7 +80,7 @@
       later(t, () => { l.strip.classList.add("down"); jumble(body_[0]); body_[0].classList.add("in"); });
       later(t + 130, () => body_.slice(1).forEach((c) => { jumble(c); c.classList.add("in"); }));
       // each letter snaps straight on its own
-      body_.forEach((c) => later(t + rnd(560, 1100), () => { c.classList.add("set"); c.style.transform = ""; }));
+      body_.forEach((c) => later(t + rnd(560, 1100), () => { c.classList.add("set"); c.style.transform = c.dataset.rest || ""; }));
       if (dot) later(t + 600, () => { dot.classList.add("in", "fly"); requestAnimationFrame(() => requestAnimationFrame(() => dot.classList.add("set"))); });
     });
   }

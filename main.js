@@ -10,7 +10,7 @@
 
   const stage = document.getElementById("stage");
   const bg = document.getElementById("bg");
-  const BG_W = 1440, BG_H = 1024; // background tile size (Figma frame)
+  const BG_W = 1024, BG_H = 1024; // background tile size (grey paper, tools/hk_paper.py)
   const plane = document.getElementById("plane");
   const hint = document.getElementById("hint");
 
@@ -23,6 +23,49 @@
   const norm = (m) => (typeof m === "string" ? { thumb: m, full: m } : m);
   window.GALLERY_MEDIA = PHOTOS.map(norm); // each photo once, for the expanded view
 
+  // small seeded RNG so every photo keeps the same cut on every load
+  function seeded(n) { let x = n >>> 0 || 1; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
+  // the cut outline (CSS polygon in px of the slot box): 4 slanted straight cuts, one of
+  // them torn (many short ragged steps) when torn >= 0
+  function cutPath(s, P, mg, torn, rnd) {
+    const j = () => rnd() * 3.5;
+    const L = P - mg[3], T = P - mg[0], R = P + s.w + mg[1], B = P + s.h + mg[2];
+    // corners nudged inward a little each way -> slanted edges
+    const c = [[L + j(), T + j()], [R - j(), T + j()], [R - j(), B - j()], [L + j(), B - j()]];
+    const pts = [];
+    const edge = (a, b, i) => {
+      pts.push(a);
+      if (i !== torn) return;
+      // torn edge: low-frequency wander + fine fibres, always outside the photo
+      const n = 48, horiz = i % 2 === 0, base = horiz ? a[1] : a[0];
+      const minOut = horiz ? P + s.h + 2 : P + s.w + 2;
+      let w1 = rnd() * 6, w2 = rnd() * 6;
+      for (let k = 1; k < n; k++) {
+        const t = k / n;
+        w1 += (rnd() - 0.5) * 3; w2 = w2 * 0.6 + (rnd() - 0.5) * 2.4;
+        let off = base - Math.abs(w1) * 0.9 + w2;
+        off = Math.max(minOut, off);
+        pts.push(horiz ? [a[0] + (b[0] - a[0]) * t, off] : [off, a[1] + (b[1] - a[1]) * t]);
+      }
+    };
+    edge(c[0], c[1], 0); edge(c[1], c[2], 1); edge(c[2], c[3], 2); edge(c[3], c[0], 3);
+    return "polygon(" + pts.map(([x, y]) => `${(x * S).toFixed(1)}px ${(y * S).toFixed(1)}px`).join(",") + ")";
+  }
+  // masking tape: translucent beige strip over the top edge, torn ends
+  function tapeEl(s, P, rnd) {
+    const t = document.createElement("div");
+    t.className = "tape";
+    const w = s.w * (0.4 + rnd() * 0.25), h = 17 + rnd() * 8;
+    const x = P + s.w * (0.15 + rnd() * 0.5) - w / 4, y = P - h * 0.45;
+    const zig = (side) => Array.from({ length: 7 }, (_, k) => `${side ? 100 - rnd() * 4 : rnd() * 4}% ${(k / 6) * 100}%`);
+    Object.assign(t.style, {
+      left: x * S + "px", top: y * S + "px", width: w * S + "px", height: h * S + "px",
+      transform: `rotate(${(rnd() - 0.5) * 5}deg)`,
+      clipPath: `polygon(${[...zig(0)].join(",")},${[...zig(1)].reverse().join(",")})`,
+    });
+    return t;
+  }
+
   function buildTile() {
     const tile = document.createElement("div");
     tile.className = "tile";
@@ -30,16 +73,27 @@
       const slot = document.createElement("div");
       slot.className = "photo";
       slot.dataset.index = s.i;
-      // the box includes an 8px margin so the cut border and shadow aren't clipped (.photo uses paint containment)
-      const P = 8;
-      if (s.r) slot.style.transform = `rotate(${s.r}deg)`;
+      // Cut like the printed photos on hakusuku.jp/recruit (measured on their hero video,
+      // in css px at 1440 wide): the photo is printed on white paper and cut by hand, so
+      // each edge has its own white margin, 0-9 px, and about a third of edges have none
+      // (the photo runs to the cut). The cuts are slightly slanted (corners off by up to
+      // ~3.5 px), so where there's no margin the cut crops into the photo. About 1 in 7 is
+      // torn along one edge instead (a ragged white strip 14-26 px), about 1 in 7 has a
+      // strip of translucent masking tape across the top. Faint paper shadow, no tilt.
+      const rnd = seeded(s.i * 7919 + 13);
+      const mg = [0, 0, 0, 0].map(() => (rnd() < 0.32 ? 0 : 2 + rnd() * 7));   // top right bottom left
+      const torn = rnd() < 0.15 ? (rnd() < 0.6 ? 2 : 1) : -1;                    // bottom or right
+      if (torn >= 0) mg[torn] = 14 + rnd() * 12;
+      const P = 30;                                                             // room around the photo for paper + tape
+      // tilt: on their live page most prints sit a degree or two off straight
+      const tilt = rnd() < 0.35 ? 0 : (rnd() - 0.5) * 3.6;
+      if (tilt) slot.style.transform = `rotate(${tilt.toFixed(2)}deg)`;
       Object.assign(slot.style, { left: (s.x - P) * S + "px", top: (s.y - P) * S + "px", width: (s.w + 2 * P) * S + "px", height: (s.h + 2 * P) * S + "px" });
-
-      // white backing, cut by hand (uneven border, nudged corners) + a soft paper shadow
-      const svg = svgEl("svg", { width: (s.w + 2 * P) * S, height: (s.h + 2 * P) * S, viewBox: `${-P} ${-P} ${s.w + 2 * P} ${s.h + 2 * P}` });
-      svg.appendChild(svgEl("path", { d: s.cut, fill: "rgba(20,40,90,0.13)", transform: "translate(0.8 1.8)" }));
-      svg.appendChild(svgEl("path", { d: s.cut, fill: "#fff" }));
-      slot.appendChild(svg);
+      const paper = document.createElement("div");
+      paper.className = "paper";
+      paper.style.clipPath = cutPath(s, P, mg, torn, rnd);
+      slot.appendChild(paper);
+      const tape = rnd() < 0.14 ? tapeEl(s, P, rnd) : null;
 
       const m = norm(PHOTOS[s.i]);
       let el;
@@ -56,7 +110,8 @@
       }
       el.classList.add("media");
       Object.assign(el.style, { left: P * S + "px", top: P * S + "px", width: s.w * S + "px", height: s.h * S + "px" });
-      slot.appendChild(el);
+      paper.appendChild(el);
+      if (tape) slot.appendChild(tape);
       tile.appendChild(slot);
     });
     return tile;
