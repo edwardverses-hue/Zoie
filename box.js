@@ -135,7 +135,7 @@ function bagCanvas() {
   g.fillStyle = "rgba(55,53,50,0.85)";
   g.font = "34px 'Jost', sans-serif"; g.fillText("for zoie", 256, 500);
   g.font = "20px 'Jost', sans-serif"; g.fillStyle = "rgba(60,58,55,0.6)";
-  ["1 of 1", "made by edward", "11.17.2026"].forEach((t, i) => g.fillText(t, 256, 860 + i * 26));
+  ["1 of 1", "11.17.2026"].forEach((t, i) => g.fillText(t, 256, 860 + i * 26));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 // serrated (pinked) edges of the heat seals

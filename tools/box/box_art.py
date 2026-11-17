@@ -36,12 +36,10 @@ def arc(d, cx, cy, w, sag, lw=3):
 
 def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
-    tracked(d, FW / 2, FH * 0.16, "A blind box.", F("400-italic", 46), 9)
     tracked(d, FW / 2, FH * 0.33, "Zoie", F("300-normal", 250), 120)
     arc(d, FW / 2, FH * 0.40, FW * 0.62, 26)
     tracked(d, FW / 2, FH * 0.53, "Birthday edition", F("400-normal", 50), 14)
     tracked(d, FW / 2, FH * 0.585, "11.17.2026", F("400-normal", 50), 22)
-    tracked(d, FW / 2, FH * 0.66, "Made by Edward.", F("400-normal", 42), 12)
     # contents table
     x0, x1, y = FW * 0.12, FW * 0.88, FH * 0.775
     sm, smb = F("400-normal", 34), F("500-normal", 34)
