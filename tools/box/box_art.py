@@ -166,37 +166,45 @@ def scatter_stars(im, n, box, seed):
         x, y = r.uniform(x0, x1), r.uniform(y0, y1); s = r.uniform(24, 46)
         stroke(d, star_pts(x, y, s, r.uniform(-0.6, 0.6) - math.pi / 2), 3, True)
 
-# ------------------------------------------------------------------ faces
+# ------------------------------------------------------------------ faces: lettering only, no drawings
+# The series checklist. PLACEHOLDER names from the photos: Edward to rename.
+SERIES = ["prom night", "tractor day", "the fog walk", "photobooth #1", "christmas tree", "waterfall",
+          "camp out", "times square", "golf range", "escape room", "face masks", "mcdonald's run",
+          "the drive", "lake lookout", "dinner date", "photobooth #2", "art museum", "first selfie"]
+
+def text_at(d, txt, font, x, y, col=INK + (225,), anchor="la"):
+    d.text((x, y), txt, font=font, fill=col, anchor=anchor)
+
+def tick_box(d, x, y, s):
+    d.rectangle([x, y, x + s, y + s], outline=INK + (200,), width=3)
+
 def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
-    text_fit(d, "Zoie", F_MARK, FW * 0.5, FH * 0.13, FW * 0.27, canvas=im)
-    text_fit(d, "Happy Birthday", F_SCRIPT, FW * 0.5, FH * 0.222, FW * 0.66, canvas=im)
-    # the figure's place: one big pencil drawing, a gift box tied with a bow, a heart on it
-    doodle(im, "gift", FW * 0.5, FH * 0.5, FW * 0.42, w=6)
-    p = heart_pts(FW * 0.5, FH * 0.6, FW * 0.18); hatch(im, p, 8); stroke(d, p, 5)
-    # ground line under it, like the figure's little planet
-    for i in range(14):
-        y = FH * 0.835 + rng.uniform(-10, 10)
-        d.line([(FW * 0.28 + rng.uniform(0, 60), y), (FW * 0.72 - rng.uniform(0, 60), y + rng.uniform(-3, 3))], fill=INK + (rng.randint(8, 20),), width=2)
-    scatter_stars(im, 6, (FW * 0.08, FH * 0.32, FW * 0.22, FH * 0.82), 5)
-    scatter_stars(im, 6, (FW * 0.78, FH * 0.32, FW * 0.92, FH * 0.82), 6)
-    text_fit(d, "EDWARD × ZOIE × 11.17.2026", F_SC, FW * 0.5, FH * 0.915, FW * 0.70, canvas=im)
+    sc = lambda n: ImageFont.truetype(F_SC, n)
+    text_at(d, "A BLIND BOX FOR", sc(54), FW / 2, FH * 0.17, anchor="mm")
+    text_fit(d, "Zoie", F_SCRIPT, FW * 0.5, FH * 0.33, FW * 0.62, canvas=im)
+    text_fit(d, "happy birthday", F_SCRIPT, FW * 0.5, FH * 0.475, FW * 0.56, col=INK + (210,), canvas=im)
+    d.line([(FW * 0.3, FH * 0.56), (FW * 0.7, FH * 0.56)], fill=INK + (150,), width=3)
+    text_at(d, "11.17.2026", sc(64), FW / 2, FH * 0.61, anchor="mm")
+    text_at(d, f"SERIES OF {len(SERIES)} + 2 SECRET", sc(40), FW / 2, FH * 0.83, col=INK + (190,), anchor="mm")
+    text_at(d, "EDWARD × ZOIE", sc(46), FW / 2, FH * 0.915, anchor="mm")
     return im
 
-def grid_face(kinds, cols, rows, y0, y1, seed, start_no):
+def list_face(seed, title, items, start, secrets=0, foot=None):
     im = paper(FW, FH, seed); d = ImageDraw.Draw(im)
-    f = ImageFont.truetype(F_SC, 34)
-    cw = FW * 0.86 / cols; ch = (y1 - y0) / rows
-    for i, k in enumerate(kinds[: cols * rows]):
-        c, r = i % cols, i // cols
-        cx = FW * 0.07 + cw * (c + 0.5); cy = y0 + ch * r
-        doodle(im, k, cx, cy + ch * 0.42, min(cw, ch) * 0.36)
-        lab = f"no. {start_no + i:02d}  {LABEL[k]}"
-        bb = d.textbbox((0, 0), lab, font=f); d.text((cx - (bb[2] - bb[0]) / 2, cy + ch * 0.81), lab, font=f, fill=INK + (215,))
+    big, f, num = ImageFont.truetype(F_SC, 60), ImageFont.truetype(F_SC, 50), ImageFont.truetype(F_SC, 38)
+    x0, x1 = FW * 0.12, FW * 0.88
+    text_at(d, title, big, x0, FH * 0.08)
+    d.line([(x0, FH * 0.08 + 82), (x1, FH * 0.08 + 82)], fill=INK + (160,), width=3)
+    y, step = FH * 0.15, FH * 0.062
+    rows = [(f"no. {start + i:02d}", t) for i, t in enumerate(items)] + [("secret", "? ? ?")] * secrets
+    for n, t in rows:
+        text_at(d, n, num, x0, y + 8, col=INK + (170,))
+        text_at(d, t, f, x0 + FW * 0.2, y)
+        tick_box(d, x1 - 44, y + 8, 40)
+        y += step
+    if foot: small_print(d, x0, FH * 0.82, foot)
     return im, d
-
-_r = random.Random(11)
-GRID = _r.sample(KINDS, 9) + _r.sample(KINDS, 12) + _r.sample(KINDS, 9)     # no repeats on one face
 
 def small_print(d, x, y, lines, size=30):
     f = ImageFont.truetype(F_SC, size)
@@ -209,17 +217,20 @@ def barcode(d, x, y, w=300, h=110):
     f = ImageFont.truetype(F_SC, 28); d.text((x + 10, y + h + 6), "1 117 2026 0 0001", font=f, fill=INK + (220,))
 
 def right():
-    im, d = grid_face(GRID[0:9], 3, 3, FH * 0.07, FH * 0.76, 2, 1)
-    small_print(d, FW * 0.1, FH * 0.8, ["one bag of photos inside.", "nobody knows which ones", "until it's opened."])
-    return im
-def back():
-    im, d = grid_face(GRID[9:21], 4, 3, FH * 0.07, FH * 0.70, 3, 10)
-    small_print(d, FW * 0.09, FH * 0.75, ["CONTENTS: OUR PHOTOS", "FOR: ZOIE", "FROM: EDWARD", "AGES: ONLY HER"])
-    barcode(d, FW * 0.6, FH * 0.76)
+    im, d = list_face(2, "THE SERIES", SERIES[0:9], 1)
     return im
 def left():
-    im, d = grid_face(GRID[21:30], 3, 3, FH * 0.07, FH * 0.76, 4, 22)
-    small_print(d, FW * 0.1, FH * 0.8, ["open with care.", "keep the box."])
+    im, d = list_face(4, "THE SERIES (cont.)", SERIES[9:18], 10, secrets=2, foot=["open with care.", "keep the box."])
+    return im
+def back():
+    im = paper(FW, FH, 3); d = ImageDraw.Draw(im)
+    sc = lambda n: ImageFont.truetype(F_SC, n)
+    text_at(d, "HOW IT WORKS", sc(60), FW * 0.12, FH * 0.08)
+    d.line([(FW * 0.12, FH * 0.08 + 82), (FW * 0.88, FH * 0.08 + 82)], fill=INK + (160,), width=3)
+    lines = ["one bag inside.", "nobody knows which photos", "until it's opened.", "", "lift the lid,", "pull out the bag,", "tear the top."]
+    for i, t in enumerate(lines): text_at(d, t, sc(52), FW * 0.12, FH * 0.17 + i * 80)
+    small_print(d, FW * 0.12, FH * 0.75, ["CONTENTS: OUR PHOTOS", "FOR: ZOIE", "FROM: EDWARD", "AGES: ONLY HER"])
+    barcode(d, FW * 0.58, FH * 0.76)
     return im
 def top():
     im = paper(FW, FW, 5); d = ImageDraw.Draw(im)

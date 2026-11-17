@@ -131,16 +131,9 @@ function bagCanvas() {
   // tear notch arrow + "tear here" on the top seal, like the real bags' small print
   g.fillStyle = "rgba(60,58,55,0.8)"; g.font = "22px 'Patrick Hand SC', sans-serif"; g.textAlign = "center";
   g.fillText("tear here", 256, 108);
-  // line drawing: a pencil heart, and her name small
-  g.strokeStyle = "rgba(55,53,50,0.85)"; g.lineWidth = 5; g.lineJoin = g.lineCap = "round";
-  g.beginPath();
-  for (let i = 0; i <= 60; i++) {
-    const t = (i / 60) * Math.PI * 2, x = 16 * Math.sin(t) ** 3, y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-    const px = 256 + x * 6.2 + Math.sin(i * 1.7) * 1.5, py = 470 + y * 6.2 + Math.cos(i * 2.3) * 1.5;
-    i ? g.lineTo(px, py) : g.moveTo(px, py);
-  }
-  g.stroke();
-  g.font = "34px 'Patrick Hand SC', sans-serif"; g.fillText("for zoie", 256, 640);
+  // lettering only, no drawing
+  g.fillStyle = "rgba(55,53,50,0.85)";
+  g.font = "34px 'Patrick Hand SC', sans-serif"; g.fillText("for zoie", 256, 500);
   g.font = "20px 'Patrick Hand SC', sans-serif"; g.fillStyle = "rgba(60,58,55,0.6)";
   ["one bag of photos", "made by edward", "11.17.2026"].forEach((t, i) => g.fillText(t, 256, 860 + i * 26));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
