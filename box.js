@@ -129,12 +129,12 @@ function bagCanvas() {
     for (let x = 2; x < 512; x += 6) { g.beginPath(); g.moveTo(x, y0 + 6); g.lineTo(x, y1 - 6); g.stroke(); }
   }
   // tear notch arrow + "tear here" on the top seal, like the real bags' small print
-  g.fillStyle = "rgba(60,58,55,0.8)"; g.font = "22px 'Patrick Hand SC', sans-serif"; g.textAlign = "center";
+  g.fillStyle = "rgba(60,58,55,0.8)"; g.font = "22px 'Jost', sans-serif"; g.textAlign = "center";
   g.fillText("tear here", 256, 108);
   // lettering only, no drawing
   g.fillStyle = "rgba(55,53,50,0.85)";
-  g.font = "34px 'Patrick Hand SC', sans-serif"; g.fillText("for zoie", 256, 500);
-  g.font = "20px 'Patrick Hand SC', sans-serif"; g.fillStyle = "rgba(60,58,55,0.6)";
+  g.font = "34px 'Jost', sans-serif"; g.fillText("for zoie", 256, 500);
+  g.font = "20px 'Jost', sans-serif"; g.fillStyle = "rgba(60,58,55,0.6)";
   ["one bag of photos", "made by edward", "11.17.2026"].forEach((t, i) => g.fillText(t, 256, 860 + i * 26));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
@@ -375,7 +375,7 @@ window.BlindBox = {
   async play(done) {
     onDone = done;
     // the box's writing uses the site's handwriting font: wait for it (max 2 s)
-    try { await Promise.race([document.fonts.load('30px "Patrick Hand SC"'), new Promise((r) => setTimeout(r, 2000))]); } catch (_) {}
+    try { await Promise.race([document.fonts.load('30px "Jost"'), new Promise((r) => setTimeout(r, 2000))]); } catch (_) {}
     if (!renderer) setup();
     if (state) { scene.remove(state.root); state = null; }
     canvas.style.display = "block"; canvas.classList.remove("gone");

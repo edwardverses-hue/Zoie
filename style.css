@@ -1,5 +1,5 @@
-/* small caps hand lettering on the blind box's inner bag (box.js) */
-@font-face { font-family: "Patrick Hand SC"; src: url("assets/fonts/patrick-hand-sc.woff2") format("woff2"); font-display: block; }
+/* geometric sans on the blind box's inner bag, matching the box print (box.js) */
+@font-face { font-family: "Jost"; src: url("assets/fonts/jost-400.woff2") format("woff2"); font-display: block; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
