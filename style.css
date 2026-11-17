@@ -455,3 +455,8 @@ body.boxing header, body.boxing #minimap, body.boxing #zoom, body.boxing #hint {
 }
 body.boxing #bb-skip { opacity: 1; pointer-events: auto; }
 @media (max-width: 720px) { #bb-hint { font-size: 24px; } }
+
+/* keychain page: plain black, like wildyriftian.com */
+html:has(body.birthday), body.birthday { background: #000; }
+body.birthday #bg { opacity: 0; }
+body.birthday header a .ink path { stroke: #f4f1e8; }   /* the hand-drawn loop shows on black */
