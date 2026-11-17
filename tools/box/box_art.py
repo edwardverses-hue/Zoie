@@ -38,8 +38,7 @@ def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
     tracked(d, FW / 2, FH * 0.33, "Zoie", F("300-normal", 250), 120)
     arc(d, FW / 2, FH * 0.40, FW * 0.62, 26)
-    tracked(d, FW / 2, FH * 0.53, "Birthday edition", F("400-normal", 50), 14)
-    tracked(d, FW / 2, FH * 0.585, "11.17.2026", F("400-normal", 50), 22)
+    tracked(d, FW / 2, FH * 0.50, "11.17.2026", F("400-normal", 50), 22)
     # contents table
     x0, x1, y = FW * 0.12, FW * 0.88, FH * 0.775
     sm, smb = F("400-normal", 34), F("500-normal", 34)
@@ -69,7 +68,6 @@ def right():
     im = paper(FW, FH, 3); d = ImageDraw.Draw(im)
     x0 = FW * 0.12
     tracked(d, x0, FH * 0.16, "Zoie", F("300-normal", 110), 52, anchor="l")
-    tracked(d, x0, FH * 0.16 + 62, "Birthday edition", F("400-normal", 30), 9, anchor="l")
     body = F("400-normal", 40)
     lines = ["Inside is one", "sealed bag.", "",
              "What's in it stays", "hidden until the bag", "is torn open."]
