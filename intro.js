@@ -78,26 +78,57 @@
   }
 
   // ---- the pile ----
-  // [ms from start, card height as a share of the screen, pile (true) or single photo]
-  const BEATS = [
-    [0, .097, 0], [167, .121, 0], [233, .238, 1], [433, .25, 1], [667, .281, 1], [700, .30, 1],
-    [800, .31, 1], [867, .32, 1], [1033, .328, 1], [1067, .33, 1], [1267, .363, 1], [1433, .361, 1],
-    [1867, .40, 1], [2367, .361, 1], [3267, .40, 1],
-    [3300, .281, 1], [3367, .25, 1], [3400, .213, 1], [3433, .12, 0], [3467, .107, 0], [3500, .097, 0],
-    [3767, .097, 0], [4033, .361, 1],
-  ];
-  const END = 4067;
+  // Measured from hakusuku's own hero video (assets/movie/kv_pc.mp4, 2560x2560, 30 fps),
+  // frame numbers are that video's. A new photo lands on top of the pile, centred, on these
+  // frames: every frame for 10 frames, then the gaps grow (2,2,2,3,4,6,9,15) -> 19 photos.
+  const F = 1000 / 30;
+  const PUSH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 20, 24, 30, 39, 54];
+  // Each new photo is a bit bigger: long side as a share of the screen's longer side
+  // (the square video is cover-fit, so its 2560 px = the longer side of the screen).
+  const LONG = (f) => f <= 1 ? .09 : f <= 6 ? .09 + (f - 1) / 5 * .015 : f <= 11 ? .105 + (f - 6) / 5 * .075 : f <= 17 ? .18 + (f - 11) / 6 * .02 : .20 + Math.min(1, (f - 17) / 13) * .02;
+  // frame 54-75: hold. 76-84: the pile pops back off, top first, down to the first photo
+  // (pile size after each pop). 84-93: that one small photo alone. 94-100: the burst.
+  const POP = [[76, 15], [77, 11], [78, 7], [79, 5], [80, 4], [81, 3], [82, 2], [84, 1]];
+  const BURST_AT = 94;
 
-  let stage = null, cards = [], playing = false, imgs = [];
-
-  function buildStage() {
-    stage = document.createElement("div");
-    stage.id = "intro";
-    for (let i = 0; i < 5; i++) { const c = document.createElement("div"); c.className = "ix"; stage.appendChild(c); }
-    document.body.appendChild(stage);
-    cards = [...stage.children];
+  let stage = null, playing = false, pilePool = [];
+  function preloadPile() {
+    const all = (window.GALLERY_MEDIA || []).filter((m) => m.thumb);
+    for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+    pilePool = all.slice(0, PUSH.length + 6).map((m) => {
+      const p = { src: m.thumb, ar: 0.75, ok: false, im: new Image() };
+      p.im.decoding = "sync";
+      p.im.src = m.thumb;
+      (p.im.decode ? p.im.decode() : Promise.reject()).then(() => { p.ok = true; p.ar = p.im.naturalWidth / p.im.naturalHeight; }).catch(() => {});
+      return p;
+    });
   }
 
+  function runPile(done) {
+    stage = document.createElement("div");
+    stage.id = "intro";
+    document.body.appendChild(stage);
+    // photos were picked and decoded while the box was being opened (preloadPile); only
+    // ones that actually decoded are used, so a card is never blank
+    const pool = pilePool.filter((p) => p.ok);
+    if (pool.length < 3) { later(0, done); return; }
+    const vmax = Math.max(innerWidth, innerHeight);
+    const cards = [];
+    PUSH.forEach((f, n) => later((f - 1) * F, () => {
+      const p = pool[n % pool.length];
+      const L = LONG(f) * vmax;
+      const w = p.ar >= 1 ? L : L * p.ar, h = p.ar >= 1 ? L / p.ar : L;
+      const c = document.createElement("div");
+      c.className = "ix";
+      // straight, centred; a hair off-centre so the older ones peek out unevenly
+      const ox = rnd(-0.03, 0.03) * w, oy = rnd(-0.03, 0.03) * h;
+      Object.assign(c.style, { width: w + "px", height: h + "px", transform: `translate(${-w / 2 + ox}px, ${-h / 2 + oy}px)` });
+      c.appendChild(p.im.parentNode ? p.im.cloneNode() : p.im);   // the decoded image itself: no re-decode, no blank frame
+      stage.appendChild(c); cards.push(c);
+    }));
+    POP.forEach(([f, keep]) => later((f - 1) * F, () => { while (cards.length > keep) cards.pop().remove(); }));
+    later((BURST_AT - 1) * F, done);
+  }
   function play() {
     const items = (window.GALLERY_MEDIA || []).filter((m) => m.thumb);
     if (reduce || items.length < 3) { resetHeadline(); showHeadline(true); return; }
@@ -107,14 +138,15 @@
     if (window.Gallery) window.Gallery.reset();
     playing = true;
     body.classList.add("intro");
+    preloadPile();
     document.querySelectorAll("#plane img").forEach((im) => { im.loading = "eager"; if (im.decode) im.decode().catch(() => {}); });
     // the opening is the blind box (box.js); she opens it, the gallery bursts out of it
-    const go = () => window.BlindBox.play(() => burst());
+    const go = () => window.BlindBox.play((opened) => (opened ? runPile(burst) : burst()));   // skip goes straight to the gallery
     if (window.BlindBox) go();
     else {
       let started = false;
       addEventListener("blindbox-ready", () => { if (!started) { started = true; go(); } }, { once: true });
-      setTimeout(() => { if (!started && !window.BlindBox) { started = true; burst(); } }, 4000);
+      setTimeout(() => { if (!started && !window.BlindBox) { started = true; runPile(burst); } }, 4000);
     }
   }
 
@@ -129,48 +161,23 @@
     body.classList.remove("intro");
     requestAnimationFrame(() => requestAnimationFrame(() => { plane.style.transition = ""; }));
     const cx = innerWidth / 2, cy = innerHeight / 2;
-    // hakusuku's burst, measured frame by frame (30 fps): photos start bunched in the
-    // centre at ~70% size and spread + grow to their places in ~130 ms (strong ease-out).
-    // More photos fly out than stay: the extras vanish in two hard cuts at ~180 and ~215 ms.
+    // hakusuku frames 94-100 (200 ms): every photo starts at the centre at full size and
+    // moves straight out to its place. Measured spread per frame: 9, 27, 51, 71, 76, 96, 100%
+    // -> close to linear. No scaling, no extra photos.
     const onScreen = [...document.querySelectorAll("#plane .photo")].filter((el) => {
       const r = el.getBoundingClientRect();
       return !(r.right < -200 || r.left > innerWidth + 200 || r.bottom < -200 || r.top > innerHeight + 200);
     });
-    const fly = (el, extra) => {
+    const K = [.09, .27, .51, .71, .76, .96, 1];
+    onScreen.forEach((el) => {
       const r = el.getBoundingClientRect();
       const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
       const rest = el.style.transform || "";
-      return el.animate([
-        { transform: `translate(${dx * 0.85}px, ${dy * 0.85}px) ${rest} scale(0.7)` },
-        { transform: `translate(${dx * 0.45}px, ${dy * 0.45}px) ${rest} scale(0.88)`, offset: 0.35 },
-        { transform: `translate(${dx * 0.1}px, ${dy * 0.1}px) ${rest} scale(0.98)`, offset: 0.7 },
-        { transform: rest || "none" }],
-        { duration: 130, easing: "linear", fill: extra ? "forwards" : "none" });
-    };
-    onScreen.forEach((el) => fly(el, false));
-    // extras: copies of other photos dropped into the gaps, gone again in two cuts
-    const tile = document.querySelector("#plane .tile");
-    const pool = [...document.querySelectorAll("#plane .photo")].filter((el) => {
-      if (onScreen.includes(el)) return false;
-      const im = el.querySelector("img");                  // only photos already loaded (no blank cards)
-      return im && im.complete && im.naturalWidth > 0;
+      el.animate(K.map((k, i) => ({ transform: `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px) ${rest}`.trim(), offset: i / (K.length - 1) })),
+        { duration: 6 * F, easing: "linear" });
     });
-    const extras = [];
-    for (let k = 0; k < Math.round(onScreen.length * 0.6) && pool.length; k++) {
-      const src = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-      const near = onScreen[Math.floor(Math.random() * onScreen.length)];
-      if (!near) break;
-      const c = src.cloneNode(true);
-      c.querySelectorAll("video").forEach((v) => { const im = document.createElement("img"); im.src = v.poster; im.className = v.className; im.style.cssText = v.style.cssText; v.replaceWith(im); });
-      c.style.left = (parseFloat(near.style.left) + (Math.random() - 0.5) * parseFloat(near.style.width) * 1.6) + "px";
-      c.style.top = (parseFloat(near.style.top) + (Math.random() - 0.5) * parseFloat(near.style.height) * 1.6) + "px";
-      c.style.pointerEvents = "none";
-      tile.appendChild(c); extras.push(c); fly(c, true);
-    }
-    const half = Math.ceil(extras.length / 2);
-    later(180, () => extras.slice(0, half).forEach((c) => c.remove()));
-    later(215, () => extras.slice(half).forEach((c) => c.remove()));
-    later(600, () => showHeadline(false));
+    // headline starts writing at frame ~106: 200 ms after the photos land
+    later(6 * F + 200, () => showHeadline(false));
   }
 
   window.Intro = { play };

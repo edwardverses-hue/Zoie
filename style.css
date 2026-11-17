@@ -230,6 +230,7 @@ body.intro #hint { opacity: 0; }
   padding: 4px 5px 5px 4px;          /* uneven white border like the cut frames */
   box-shadow: 0 1px 3px rgba(20, 40, 90, 0.22);
 }
+#intro .ix img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 /* headline: every letter on its own scrap of paper (ransom-note collage) */
 #headline {

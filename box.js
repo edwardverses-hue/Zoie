@@ -514,7 +514,7 @@ function finish(fromOpen) {
   state.done = true;
   hint("");
   document.body.classList.remove("boxing");
-  if (onDone) onDone();
+  if (onDone) onDone(fromOpen);
   canvas.classList.add("gone");
   setTimeout(() => {
     cancelAnimationFrame(raf); raf = 0;
