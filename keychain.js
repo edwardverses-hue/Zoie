@@ -19,15 +19,12 @@
     // padlock first = behind everything (as on wildyriftian.com): the split rings cross over
     // its ring, so they read as threaded through it
     { src: "keychain/00padlock.webp", top: true },
-    { src: "keychain/05illustration.webp", amp: -3, order: 6, hov: 0 },    // reference slot L1 (star)
-    { src: "keychain/02branding.webp", amp: 3, order: 2, hov: -7 },       // reference slot L4
-    { src: "keychain/06photo.webp", amp: 3, order: 3, hov: -4 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
-    { src: "keychain/03gwen.webp", amp: 2, order: 4, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
-    { src: "keychain/01suki.webp", amp: 3, order: 1, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
-    { src: "keychain/07daffodil.webp", amp: -2, order: 0, hov: -5 },          // Jellycat Bartholomew Bear 'Daffodil' (product photo), on the split ring by its flower bonnet; leftmost, hangs over the car
-    { src: "keychain/04livingwild.webp", amp: -3, order: 5, hov: 9 },         // Hirono Living Wild - Fight for Joy plush (Pop Mart photo), much bigger; reference slot L2
+    { src: "keychain/04livingwild.webp", amp: -3, order: 2, hov: 9 },         // Hirono Living Wild - Fight for Joy plush (Pop Mart photo), much bigger, at the back; reference slot L2
+    { src: "keychain/06photo.webp", amp: 3, order: 1, hov: -4 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
+    { src: "keychain/03gwen.webp", amp: 2, order: 3, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
+    { src: "keychain/01suki.webp", amp: 3, order: 0, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
   ];
-  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "02branding.webp": [34.083, 34.25, 23.75, 58.333], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04livingwild.webp": [49.583, 32.167, 32.917, 51.25], "05illustration.webp": [47.917, 33.75, 31.833, 37.917], "06photo.webp": [34.083, 34.167, 30.417, 53.667], "07daffodil.webp": [23.667, 33.833, 27.667, 30.75]};
+  const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04livingwild.webp": [49.583, 32.167, 32.917, 51.25], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
   // Motion measured from wildyriftian.com (headless Chrome, 1440x900, every frame):
   //  idle  - one shared cosine phase p (period 3.52 s): padlock moves down 4px*p; each
   //          charm moves down 4px*p, sideways -amp*p px and rotates amp*p deg (px at a 720px box)
