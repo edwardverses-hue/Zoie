@@ -7,13 +7,13 @@
   sides  : a grid of small pencil sketches with tiny captions + a small-print block
   back   : 4-col grid + small print + barcode
   top    : black label
-None of Pop Mart's art or logos: the sketches are made from Edward's own photos.
-Run: python3 tools/box/box_art.py   (needs rembg; writes assets/box/*.webp)
+None of Pop Mart's art or logos, and no photos of them on the box (Edward's call):
+the drawings are simple pencil doodles drawn here in code.
+Run: python3 tools/box/box_art.py   (writes assets/box/*.webp)
 """
 import os, sys, math, random
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
-from rembg import remove, new_session
 
 HERE = os.path.dirname(__file__); ROOT = os.path.join(HERE, "..", "..")
 OUT = os.path.join(ROOT, "assets", "box"); os.makedirs(OUT, exist_ok=True)
@@ -49,38 +49,6 @@ def paper(w, h, seed):
     im = Image.composite(grey, im, cr)
     return im.convert("RGBA")
 
-# ------------------------------------------------------------------ pencil sketch of a photo
-_sess = None
-def xdog(g, s, k=1.6, p=22, eps=-0.015, phi=12):
-    a = np.asarray(g.filter(ImageFilter.GaussianBlur(s)), float) / 255
-    b = np.asarray(g.filter(ImageFilter.GaussianBlur(s * k)), float) / 255
-    dd = (1 + p) * a - p * b
-    return np.where(dd >= eps, 1.0, 1 + np.tanh(phi * (dd - eps)))
-
-def sketch(n, H=1400, shade_k=0.32):
-    key = f"{CACHE}/{n}_{H}.png"
-    if os.path.exists(key): return Image.open(key)
-    global _sess
-    if _sess is None: _sess = new_session("u2net_human_seg")
-    src = os.path.join(ROOT, "photos", "full", f"{n}.webp")
-    if not os.path.exists(src): src = os.path.join(ROOT, "photos", "thumb", f"{n}.webp")   # clips: their still
-    im = Image.open(src).convert("RGB")
-    im = im.resize((round(im.width * H / im.height), H), Image.LANCZOS)
-    m = np.asarray(remove(im, session=_sess).split()[-1], float) / 255
-    g = ImageOps.autocontrast(ImageOps.grayscale(im), cutoff=1)
-    lines = xdog(g, max(0.8, H / 1200))
-    inv = ImageOps.invert(g).filter(ImageFilter.GaussianBlur(H / 100))
-    G, I = np.asarray(g, float), np.asarray(inv, float)
-    dodge = np.clip(G * 255 / (255 - I + 1e-3), 0, 255) / 255
-    v = np.minimum(lines, 1 - (1 - dodge) * shade_k)
-    M = Image.fromarray((m * 255).astype("uint8"))
-    edge = np.asarray(M.filter(ImageFilter.FIND_EDGES).filter(ImageFilter.GaussianBlur(H / 1600)), float) / 255
-    v = np.minimum(v, 1 - np.clip(edge * 2.2, 0, 0.8))
-    a = np.clip((1 - v) * m * 1.1, 0, 1)
-    rgba = np.zeros((*a.shape, 4), "uint8"); rgba[..., :3] = INK; rgba[..., 3] = (a * 255).astype("uint8")
-    o = Image.fromarray(rgba); o = o.crop(o.getbbox()); o.save(key)
-    return o
-
 # ------------------------------------------------------------------ little hand drawings
 def pencil_line(d, pts, w=4, col=INK + (210,)):
     for j in range(2):                      # gone over twice, slightly off
@@ -106,48 +74,129 @@ def text_fit(d, txt, font_path, cx, cy, width, col=INK + (235,), rot=0, canvas=N
     if rot: layer = layer.rotate(rot, resample=Image.BICUBIC, expand=True)
     canvas.alpha_composite(layer, (int(cx - layer.width / 2), int(cy - layer.height / 2)))
 
-# ------------------------------------------------------------------ faces
-FRONT_PHOTO = "18"
-GRID = ["04", "10", "21", "25", "33", "40", "41", "45", "49", "52", "56", "58",
-        "26", "53", "07", "12", "16", "24", "54", "61", "64",
-        "08", "38", "44", "51", "55", "22", "03", "31", "13"]
+# ------------------------------------------------------------------ pencil doodles (no photos on the box)
+def wob(pts, amt=1.6):
+    return [(x + rng.uniform(-amt, amt), y + rng.uniform(-amt, amt)) for x, y in pts]
+def stroke(d, pts, w, closed=False):
+    if closed: pts = pts + pts[:1]
+    for j, k in enumerate((1.0, 0.5)):        # gone over twice, slightly off
+        d.line(wob(pts), fill=INK + (int(215 * k),), width=max(1, w - j), joint="curve")
+def circle_pts(cx, cy, rx, ry, n=48, a0=0, a1=2 * math.pi):
+    return [(cx + rx * math.cos(a0 + (a1 - a0) * i / n), cy + ry * math.sin(a0 + (a1 - a0) * i / n)) for i in range(n + 1)]
+def hatch(im, poly, spacing, w=2, ang=0.8, alpha=70):
+    m = Image.new("L", im.size, 0); ImageDraw.Draw(m).polygon(poly, fill=255)
+    lay = Image.new("RGBA", im.size, (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
+    W_, H_ = im.size; L = W_ + H_
+    for o in range(-L, L, spacing):
+        x0, y0 = o, 0; x1, y1 = o + math.cos(ang) * L, math.sin(ang) * L
+        ld.line([(x0 + rng.uniform(-2, 2), y0), (x1, y1)], fill=INK + (alpha,), width=w)
+    a = np.asarray(lay).copy(); a[..., 3] = (a[..., 3].astype(float) * np.asarray(m) / 255).astype("uint8")
+    im.alpha_composite(Image.fromarray(a))
+def heart_pts(cx, cy, s, n=60):
+    out = []
+    for i in range(n + 1):
+        t = i / n * 2 * math.pi
+        x = 16 * math.sin(t) ** 3; y = -(13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t))
+        out.append((cx + x * s / 32, cy + y * s / 32))
+    return out
+def star_pts(cx, cy, r, rot=-math.pi / 2):
+    return [(cx + (r if i % 2 == 0 else r * 0.45) * math.cos(rot + i * math.pi / 5), cy + (r if i % 2 == 0 else r * 0.45) * math.sin(rot + i * math.pi / 5)) for i in range(10)]
 
+def doodle(im, kind, cx, cy, s, w=3):
+    d = ImageDraw.Draw(im)
+    if kind == "heart":
+        p = heart_pts(cx, cy, s * 1.6); hatch(im, p, 9, ang=0.9); stroke(d, p, w)
+    elif kind == "star":
+        p = star_pts(cx, cy, s * 0.8); stroke(d, p, w, True)
+    elif kind == "moon":
+        a = circle_pts(cx, cy, s * 0.7, s * 0.7, 40, math.pi * 0.42, math.pi * 1.58); b = circle_pts(cx + s * 0.28, cy - s * 0.05, s * 0.56, s * 0.56, 40, math.pi * 1.42, math.pi * 0.58)
+        p = a + b; hatch(im, p, 9); stroke(d, p, w, True)
+    elif kind == "flower":
+        for k in range(5):
+            ang = k * 2 * math.pi / 5; px, py = cx + math.cos(ang) * s * 0.36, cy - s * 0.25 + math.sin(ang) * s * 0.36
+            stroke(d, circle_pts(px, py, s * 0.24, s * 0.24, 24), w)
+        stroke(d, circle_pts(cx, cy - s * 0.25, s * 0.12, s * 0.12, 16), w)
+        stroke(d, [(cx, cy - s * 0.05), (cx - s * 0.05, cy + s * 0.4), (cx, cy + s * 0.85)], w)
+        stroke(d, [(cx - s * 0.03, cy + s * 0.45), (cx - s * 0.32, cy + s * 0.3), (cx - s * 0.05, cy + s * 0.55)], w)
+    elif kind == "gift":
+        x0, y0, x1, y1 = cx - s * 0.6, cy - s * 0.2, cx + s * 0.6, cy + s * 0.75
+        box = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]; hatch(im, box, 11, ang=2.3, alpha=45); stroke(d, box, w, True)
+        stroke(d, [(x0 - s * 0.06, y0 - s * 0.22), (x1 + s * 0.06, y0 - s * 0.22), (x1 + s * 0.06, y0), (x0 - s * 0.06, y0)], w, True)
+        stroke(d, [(cx, y0 - s * 0.22), (cx, y1)], w)
+        stroke(d, circle_pts(cx - s * 0.2, y0 - s * 0.38, s * 0.2, s * 0.13, 24), w); stroke(d, circle_pts(cx + s * 0.2, y0 - s * 0.38, s * 0.2, s * 0.13, 24), w)
+    elif kind == "cake":
+        x0, x1 = cx - s * 0.65, cx + s * 0.65
+        stroke(d, [(x0, cy), (x0, cy + s * 0.7), (x1, cy + s * 0.7), (x1, cy)], w)
+        stroke(d, circle_pts(cx, cy, s * 0.65, s * 0.16, 40), w)
+        stroke(d, [(x0, cy + s * 0.32)] + [(x0 + (x1 - x0) * i / 8, cy + s * (0.32 + 0.08 * (i % 2))) for i in range(9)], w - 1)
+        for k in (-0.3, 0, 0.3):
+            stroke(d, [(cx + k * s, cy - s * 0.05), (cx + k * s, cy - s * 0.45)], w)
+            stroke(d, [(cx + k * s, cy - s * 0.5), (cx + k * s - s * 0.07, cy - s * 0.6), (cx + k * s, cy - s * 0.75), (cx + k * s + s * 0.07, cy - s * 0.6), (cx + k * s, cy - s * 0.5)], w - 1)
+    elif kind == "envelope":
+        x0, y0, x1, y1 = cx - s * 0.75, cy - s * 0.45, cx + s * 0.75, cy + s * 0.5
+        stroke(d, [(x0, y0), (x1, y0), (x1, y1), (x0, y1)], w, True); stroke(d, [(x0, y0), (cx, cy + s * 0.1), (x1, y0)], w)
+        p = heart_pts(cx, cy + s * 0.1, s * 0.35); hatch(im, p, 6); stroke(d, p, w - 1)
+    elif kind == "camera":
+        x0, y0, x1, y1 = cx - s * 0.75, cy - s * 0.35, cx + s * 0.75, cy + s * 0.55
+        stroke(d, [(x0, y0), (cx - s * 0.25, y0), (cx - s * 0.15, y0 - s * 0.2), (cx + s * 0.25, y0 - s * 0.2), (cx + s * 0.35, y0), (x1, y0), (x1, y1), (x0, y1)], w, True)
+        stroke(d, circle_pts(cx, cy + s * 0.1, s * 0.3, s * 0.3), w); p = circle_pts(cx, cy + s * 0.1, s * 0.16, s * 0.16); hatch(im, p, 5); stroke(d, p, w - 1)
+    elif kind == "balloon":
+        p = circle_pts(cx, cy - s * 0.25, s * 0.45, s * 0.55); hatch(im, p, 10, ang=2.2, alpha=55); stroke(d, p, w)
+        stroke(d, [(cx, cy + s * 0.3), (cx - s * 0.1, cy + s * 0.5), (cx + s * 0.08, cy + s * 0.7), (cx - s * 0.04, cy + s * 0.95)], w - 1)
+    elif kind == "sun":
+        stroke(d, circle_pts(cx, cy, s * 0.35, s * 0.35), w)
+        for k in range(10):
+            a = k * math.pi / 5; stroke(d, [(cx + math.cos(a) * s * 0.5, cy + math.sin(a) * s * 0.5), (cx + math.cos(a) * s * 0.78, cy + math.sin(a) * s * 0.78)], w)
+    elif kind == "cloud":
+        p = (circle_pts(cx - s * 0.4, cy + s * 0.1, s * 0.3, s * 0.28, 20, math.pi * 0.5, math.pi * 1.6) + circle_pts(cx - s * 0.05, cy - s * 0.12, s * 0.38, s * 0.36, 24, math.pi * 1.1, math.pi * 1.95)
+             + circle_pts(cx + s * 0.42, cy + s * 0.08, s * 0.3, s * 0.3, 20, math.pi * 1.4, math.pi * 2.5))
+        stroke(d, p, w, True)
+    elif kind == "ring":
+        stroke(d, circle_pts(cx, cy + s * 0.2, s * 0.5, s * 0.5), w); stroke(d, circle_pts(cx, cy + s * 0.2, s * 0.38, s * 0.38), w - 1)
+        p = [(cx - s * 0.2, cy - s * 0.32), (cx + s * 0.2, cy - s * 0.32), (cx + s * 0.3, cy - s * 0.45), (cx, cy - s * 0.75), (cx - s * 0.3, cy - s * 0.45)]
+        hatch(im, p, 6, alpha=60); stroke(d, p, w, True)
+
+KINDS = ["heart", "star", "moon", "flower", "gift", "cake", "envelope", "camera", "balloon", "sun", "cloud", "ring"]
+LABEL = {"heart": "heart", "star": "star", "moon": "moon", "flower": "flower", "gift": "gift", "cake": "cake", "envelope": "letter", "camera": "camera", "balloon": "balloon", "sun": "sun", "cloud": "cloud", "ring": "ring"}
+
+def scatter_stars(im, n, box, seed):
+    r = random.Random(seed); d = ImageDraw.Draw(im)
+    x0, y0, x1, y1 = box
+    for _ in range(n):
+        x, y = r.uniform(x0, x1), r.uniform(y0, y1); s = r.uniform(24, 46)
+        stroke(d, star_pts(x, y, s, r.uniform(-0.6, 0.6) - math.pi / 2), 3, True)
+
+# ------------------------------------------------------------------ faces
 def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
     text_fit(d, "Zoie", F_MARK, FW * 0.5, FH * 0.13, FW * 0.27, canvas=im)
     text_fit(d, "Happy Birthday", F_SCRIPT, FW * 0.5, FH * 0.222, FW * 0.66, canvas=im)
-    sk = sketch(FRONT_PHOTO, 1600)
-    h = int(FH * 0.56); w = int(sk.width * h / sk.height)
-    if w > FW * 0.62: w = int(FW * 0.62); h = int(sk.height * w / sk.width)
-    sk = sk.resize((w, h), Image.LANCZOS)
-    top = int(FH * 0.30)
-    # soft pencil ground shadow under the feet
-    sh = Image.new("RGBA", (int(w * 0.95), 70), (0, 0, 0, 0)); sd = ImageDraw.Draw(sh)
-    for i in range(46):
-        y = 35 + rng.uniform(-14, 14); x0 = rng.uniform(0, w * 0.2); x1 = w * 0.95 - rng.uniform(0, w * 0.2)
-        sd.line([(x0, y), (x1, y + rng.uniform(-4, 4))], fill=INK + (rng.randint(14, 34),), width=2)
-    im.alpha_composite(sh, (int(FW / 2 - sh.width / 2), top + h - 40))
-    im.alpha_composite(sk, (int(FW / 2 - w / 2), top))
-    for (fx, fy, s, r) in [(0.16, 0.36, 70, -0.3), (0.85, 0.40, 54, 0.25), (0.12, 0.62, 46, 0.2), (0.88, 0.66, 66, -0.2), (0.2, 0.80, 40, 0.4), (0.82, 0.83, 44, -0.35)]:
-        heart(d, FW * fx, FH * fy, s, r)
+    # the figure's place: one big pencil drawing, a gift box tied with a bow, a heart on it
+    doodle(im, "gift", FW * 0.5, FH * 0.5, FW * 0.42, w=6)
+    p = heart_pts(FW * 0.5, FH * 0.6, FW * 0.18); hatch(im, p, 8); stroke(d, p, 5)
+    # ground line under it, like the figure's little planet
+    for i in range(14):
+        y = FH * 0.835 + rng.uniform(-10, 10)
+        d.line([(FW * 0.28 + rng.uniform(0, 60), y), (FW * 0.72 - rng.uniform(0, 60), y + rng.uniform(-3, 3))], fill=INK + (rng.randint(8, 20),), width=2)
+    scatter_stars(im, 6, (FW * 0.08, FH * 0.32, FW * 0.22, FH * 0.82), 5)
+    scatter_stars(im, 6, (FW * 0.78, FH * 0.32, FW * 0.92, FH * 0.82), 6)
     text_fit(d, "EDWARD × ZOIE × 11.17.2026", F_SC, FW * 0.5, FH * 0.915, FW * 0.70, canvas=im)
     return im
 
-def grid_face(nums, cols, rows, y0, y1, seed, start_no):
+def grid_face(kinds, cols, rows, y0, y1, seed, start_no):
     im = paper(FW, FH, seed); d = ImageDraw.Draw(im)
     f = ImageFont.truetype(F_SC, 34)
     cw = FW * 0.86 / cols; ch = (y1 - y0) / rows
-    for i, n in enumerate(nums[: cols * rows]):
+    for i, k in enumerate(kinds[: cols * rows]):
         c, r = i % cols, i // cols
         cx = FW * 0.07 + cw * (c + 0.5); cy = y0 + ch * r
-        sk = sketch(n, 900, 0.22)
-        h = int(ch * 0.74); w = int(sk.width * h / sk.height)
-        if w > cw * 0.86: w = int(cw * 0.86); h = int(sk.height * w / sk.width)
-        sk = sk.resize((w, h), Image.LANCZOS)
-        im.alpha_composite(sk, (int(cx - w / 2), int(cy + ch * 0.78 - h)))
-        lab = f"no. {start_no + i:02d}"
+        doodle(im, k, cx, cy + ch * 0.42, min(cw, ch) * 0.36)
+        lab = f"no. {start_no + i:02d}  {LABEL[k]}"
         bb = d.textbbox((0, 0), lab, font=f); d.text((cx - (bb[2] - bb[0]) / 2, cy + ch * 0.81), lab, font=f, fill=INK + (215,))
     return im, d
+
+_r = random.Random(11)
+GRID = _r.sample(KINDS, 9) + _r.sample(KINDS, 12) + _r.sample(KINDS, 9)     # no repeats on one face
 
 def small_print(d, x, y, lines, size=30):
     f = ImageFont.truetype(F_SC, size)
