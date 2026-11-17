@@ -18,10 +18,10 @@
     // padlock first = behind everything (as on wildyriftian.com): the split rings cross over
     // its ring, so they read as threaded through it
     { src: "keychain/00padlock.webp", top: true },
-    { src: "keychain/04livingwild.webp", amp: -3, order: 2, hov: 9 },         // Hirono Living Wild - Fight for Joy plush (Pop Mart photo), much bigger, at the back; reference slot L2
-    { src: "keychain/06photo.webp", amp: 3, order: 1, hov: -4 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
-    { src: "keychain/03gwen.webp", amp: 2, order: 3, hov: 9 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
-    { src: "keychain/01suki.webp", amp: 3, order: 0, hov: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
+    { src: "keychain/04livingwild.webp", amp: -3, order: 3 },         // Hirono Living Wild - Fight for Joy plush (Pop Mart photo), much bigger, at the back; reference slot L2
+    { src: "keychain/06photo.webp", amp: 3, order: 1 },   // the acrylic photo keychain (real); takes reference slot L5 (motion)
+    { src: "keychain/03gwen.webp", amp: 2, order: 2 },    // takes reference slot L3 (editorial); LEGO Ghost-Spider (Spider-Gwen) key chain 854292 (LEGO product photo)
+    { src: "keychain/01suki.webp", amp: 3, order: 0 },    // extra slot (no reference value: plain idle); Suki S2000 Hot Wheels, top-down (real photo of the loose car)
   ];
   const BOX = {"00padlock.webp": [42.333, 1.917, 16.0, 36.5], "01suki.webp": [31.083, 33.917, 20.667, 41.167], "03gwen.webp": [51.667, 33.833, 30.833, 61.083], "04livingwild.webp": [51.25, 32.417, 31.25, 51.0], "06photo.webp": [34.083, 34.167, 30.417, 53.667]};
   // Motion measured from wildyriftian.com (headless Chrome, 1440x900, every frame):
@@ -30,7 +30,20 @@
   //  hover - the other charms spring to +/-30 deg (idle rotation keeps running on top,
   //          their idle drift goes to 0); the hovered charm keeps its idle sway and springs
   //          to its own small angle (hov). Spring fitted to the recorded curves.
-  const SWING = 30;
+  // Hover poses, computed by tools/keychain/fan.py from each charm's opaque pixels around
+  // the ring point (angles: left-to-right order suki -24, photo -3, gwen +28, living wild +37).
+  // POSE[h][i] = rotation (deg, clockwise) of charm order i while charm h is hovered:
+  // the hovered charm comes to the front; a middle one swings 60% of the way to hanging plumb,
+  // an end one swings 8 deg outward (pulled out to its side, making room); every
+  // other charm swings out away from it, far enough to clear its body by 8 deg where that
+  // stays under 40 deg (a keyring doesn't fling charms sideways), and a charm farther out
+  // always swings at least as far as the one inside it, so none ever crosses another.
+  const POSE = [
+    [  8.0, -37.3, -44.3, -51.3],
+    [ 40.0,  -1.9, -34.3, -44.2],
+    [ 47.0,  40.0,  16.9, -23.0],
+    [ 45.8,  38.8,  31.8,  -8.0],
+  ];
   const PERIOD = 3520, BOB = 4, REF = 720;
   const K = 95, D = 13.5;
 
@@ -54,39 +67,68 @@
   const charms = els.filter((l) => !l.top);
   const N = charms.length;
 
-  // the hover strips
+  // Hover area over the charms. Which charm is "hovered" is decided by its actual pixels
+  // in the rest pose (front-most opaque charm under the pointer), not by vertical slices:
+  // gwen and living wild hang over the same columns. Rest pose, so a charm swinging away
+  // never changes the pick under a still pointer. Near the ring point every chain meets,
+  // so the pick holds there instead of flickering.
   const strips = document.createElement("div");
   strips.className = "kc-strips";
-  for (let i = 0; i < N; i++) {
-    const s = document.createElement("span");
-    s.dataset.i = i;
-    strips.appendChild(s);
-  }
   box.appendChild(strips);
+  const MW = 96;   // hit mask width per charm
+  const masks = charms.map((l) => {
+    const m = { l, ok: false };
+    const img = l.el.firstChild;
+    const build = () => {
+      const h = Math.round(MW * img.naturalHeight / img.naturalWidth);
+      const c = document.createElement("canvas"); c.width = MW; c.height = h;
+      const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, MW, h);
+      m.d = g.getImageData(0, 0, MW, h).data; m.h = h; m.ok = true;
+    };
+    img.complete && img.naturalWidth ? build() : img.addEventListener("load", build, { once: true });
+    return m;
+  });
+  const front = masks.slice().reverse();   // later layers paint on top
+  const pick = (cx, cy) => {               // -> charm order, -1 = none, null = ring zone (keep)
+    const r = box.getBoundingClientRect();
+    const x = ((cx - r.left) / r.width) * 100, y = ((cy - r.top) / r.height) * 100;
+    if (Math.hypot(x - 50, y - 40) < 14) return null;
+    for (const m of front) {
+      if (!m.ok) continue;
+      const [bl, bt, bw, bh] = BOX[m.l.src.split("/").pop()];
+      const u = (x - bl) / bw, v = (y - bt) / bh;
+      if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
+      if (m.d[(Math.floor(v * m.h) * MW + Math.floor(u * MW)) * 4 + 3] > 40) return m.l.order;
+    }
+    return -1;
+  };
 
   let hovered = -1;
-  const setHover = (i) => { hovered = i; };
-  strips.addEventListener("pointerover", (e) => { if (e.target.dataset.i) setHover(+e.target.dataset.i); });
+  const setHover = (i) => { if (i !== null) hovered = i; };
+  strips.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse") { setHover(pick(e.clientX, e.clientY)); strips.style.cursor = hovered >= 0 ? "pointer" : ""; }
+  });
   strips.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") setHover(-1); });
   // touch: a tap picks a charm and it stays picked (tap it again, or anywhere else, to let
-  // go); sliding a finger across the strips moves the pick along with it
-  let touchStartI = -1, wasPicked = -1;
+  // go); sliding a finger across the charms moves the pick along with it
+  let touching = false, touchStartI = -1, wasPicked = -1;
   strips.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "mouse") return;
     try { strips.releasePointerCapture(e.pointerId); } catch (_) {}
-    wasPicked = hovered;
-    touchStartI = e.target.dataset.i ? +e.target.dataset.i : -1;
-    if (touchStartI >= 0) setHover(touchStartI);
+    wasPicked = hovered; touching = true;
+    touchStartI = pick(e.clientX, e.clientY);
+    if (touchStartI !== null && touchStartI >= 0) setHover(touchStartI);
   });
   strips.addEventListener("pointermove", (e) => {
-    if (e.pointerType === "mouse" || touchStartI < 0) return;
-    const t = document.elementFromPoint(e.clientX, e.clientY);
-    if (t && t.parentElement === strips) setHover(+t.dataset.i);
+    if (e.pointerType === "mouse" || !touching) return;
+    const i = pick(e.clientX, e.clientY);
+    if (i !== null && i >= 0) setHover(i);
   });
   strips.addEventListener("pointerup", (e) => {
     if (e.pointerType === "mouse") return;
-    if (touchStartI >= 0 && touchStartI === hovered && wasPicked === touchStartI) setHover(-1);   // tapped the picked one again
-    touchStartI = -1;
+    if (touchStartI === null || touchStartI < 0) setHover(-1);                                   // tapped empty space
+    else if (touchStartI === hovered && wasPicked === touchStartI) setHover(-1);               // tapped the picked one again
+    touching = false; touchStartI = -1;
   });
   addEventListener("pointerdown", (e) => {   // tap anywhere off the keychain lets go
     if (e.pointerType !== "mouse" && !strips.contains(e.target)) setHover(-1);
@@ -94,17 +136,22 @@
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const t0 = performance.now();
-  let last = t0;
+  let last = t0, raised = -1;
   (function loop(now) {
     if (!document.body.classList.contains("birthday")) { last = now; requestAnimationFrame(loop); return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const p = reduce ? 0 : (1 - Math.cos(((now - t0) / PERIOD) * Math.PI * 2)) / 2;
     const k = box.offsetWidth / REF;
     const y = p * BOB * k;
+    // the hovered charm is drawn in front; once everything has settled back, the stacking
+    // returns to the rest order (so nothing pops forward/back mid-swing)
+    if (hovered >= 0) raised = hovered;
+    else if (raised >= 0 && charms.every((c) => Math.abs(c.a) < 2)) raised = -1;
     for (const l of els) {
+      if (!l.top) l.el.style.zIndex = l.order === raised ? 5 : "";
       if (l.top) { l.el.style.transform = `translateY(${y}px)`; continue; }
       const mine = hovered < 0 || l.order === hovered;
-      const target = hovered < 0 ? 0 : l.order === hovered ? l.hov : l.order < hovered ? SWING : -SWING;
+      const target = hovered < 0 ? 0 : POSE[hovered][l.order];
       const wt = mine ? 1 : 0;
       if (reduce) { l.a = target; l.v = 0; l.w = wt; l.wv = 0; }
       else {
@@ -119,7 +166,8 @@
 
   window.Keychain = {
     grab: () => false, move() {}, release() {}, swing() {},
-    reset() { setHover(-1); },
+    reset() { hovered = -1; },
+    pick,
     hits(x, y) { const r = strips.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; },
   };
 })();

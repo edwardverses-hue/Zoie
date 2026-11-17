@@ -291,9 +291,8 @@ header { z-index: 8; }
 
 /* hover strips over the keychain (one per charm), after wildyriftian.com desktop */
 #keychain { z-index: 3; }
-.kc-strips { position: absolute; left: 20%; top: 36.9%; width: 60%; height: 62.5%; display: flex; pointer-events: none; }
+.kc-strips { position: absolute; z-index: 10; left: 28%; top: 30%; width: 56%; height: 70%; pointer-events: none; touch-action: none; }
 body.birthday .kc-strips { pointer-events: auto; }
-.kc-strips span { flex: 1; touch-action: none; cursor: pointer; }   /* their strips are links: pointer cursor */
 
 /* header: strict 3-column grid so the date sits exactly on the centre line (over the keychain) */
 header {
