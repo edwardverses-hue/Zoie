@@ -10,8 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(__file__); OUT = os.path.join(HERE, "..", "..", "assets", "box"); os.makedirs(OUT, exist_ok=True)
 F = lambda w, n: ImageFont.truetype(os.path.join(HERE, f"jost-{w}.ttf"), n)
-BASE = (64, 96, 196)         # flat cobalt-periwinkle: reads as blue under the scene lighting, separate from the page
-INK = (242, 239, 230)         # off-white: ~5.8:1 on the blue, readable at the small sizes
+BASE = (246, 245, 241)       # white board (slightly warm, as printed card stock reads)
+INK = (31, 32, 32)            # near-black, the same ink as the title
 FW, FH = 1300, 2000
 N_PHOTOS, N_CLIPS = 56, 9     # from photos.js: 65 pieces, 9 of them loops
 

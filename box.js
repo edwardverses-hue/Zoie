@@ -49,7 +49,7 @@ function setup() {
   const small = Math.min(innerWidth, innerHeight) < 600;
   renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.5 : 2));   // phones: less to draw per frame
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;   // white board should read white, not grey
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
