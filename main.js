@@ -49,7 +49,7 @@
         el.setAttribute("muted", ""); el.setAttribute("playsinline", "");
         el.setAttribute("disablepictureinpicture", ""); el.setAttribute("disableremoteplayback", "");
         el.controls = false;
-        if (m.thumb) el.poster = m.thumb;
+        if (m.thumb) { el.poster = m.thumb; el.style.background = `#fff url("${m.thumb}") center / cover no-repeat`; }   // never a blank card before the clip loads
       } else {
         el = document.createElement("img");
         Object.assign(el, { src: m.thumb, alt: "", loading: "lazy", decoding: "async", draggable: false });

@@ -129,16 +129,47 @@
     body.classList.remove("intro");
     requestAnimationFrame(() => requestAnimationFrame(() => { plane.style.transition = ""; }));
     const cx = innerWidth / 2, cy = innerHeight / 2;
-    // hakusuku's burst: every photo starts bunched near the centre at full size and
-    // springs out to its place in ~0.27 s (no fade, no scaling). Each keeps its tilt.
-    document.querySelectorAll("#plane .photo").forEach((el) => {
+    // hakusuku's burst, measured frame by frame (30 fps): photos start bunched in the
+    // centre at ~70% size and spread + grow to their places in ~130 ms (strong ease-out).
+    // More photos fly out than stay: the extras vanish in two hard cuts at ~180 and ~215 ms.
+    const onScreen = [...document.querySelectorAll("#plane .photo")].filter((el) => {
       const r = el.getBoundingClientRect();
-      if (r.right < -300 || r.left > innerWidth + 300 || r.bottom < -300 || r.top > innerHeight + 300) return;
+      return !(r.right < -200 || r.left > innerWidth + 200 || r.bottom < -200 || r.top > innerHeight + 200);
+    });
+    const fly = (el, extra) => {
+      const r = el.getBoundingClientRect();
       const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
       const rest = el.style.transform || "";
-      el.animate([{ transform: `translate(${dx * 0.8}px, ${dy * 0.8}px) ${rest}` }, { transform: rest || "none" }],
-        { duration: 270, easing: "cubic-bezier(.22,1,.36,1)" });
+      return el.animate([
+        { transform: `translate(${dx * 0.85}px, ${dy * 0.85}px) ${rest} scale(0.7)` },
+        { transform: `translate(${dx * 0.45}px, ${dy * 0.45}px) ${rest} scale(0.88)`, offset: 0.35 },
+        { transform: `translate(${dx * 0.1}px, ${dy * 0.1}px) ${rest} scale(0.98)`, offset: 0.7 },
+        { transform: rest || "none" }],
+        { duration: 130, easing: "linear", fill: extra ? "forwards" : "none" });
+    };
+    onScreen.forEach((el) => fly(el, false));
+    // extras: copies of other photos dropped into the gaps, gone again in two cuts
+    const tile = document.querySelector("#plane .tile");
+    const pool = [...document.querySelectorAll("#plane .photo")].filter((el) => {
+      if (onScreen.includes(el)) return false;
+      const im = el.querySelector("img");                  // only photos already loaded (no blank cards)
+      return im && im.complete && im.naturalWidth > 0;
     });
+    const extras = [];
+    for (let k = 0; k < Math.round(onScreen.length * 0.6) && pool.length; k++) {
+      const src = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      const near = onScreen[Math.floor(Math.random() * onScreen.length)];
+      if (!near) break;
+      const c = src.cloneNode(true);
+      c.querySelectorAll("video").forEach((v) => { const im = document.createElement("img"); im.src = v.poster; im.className = v.className; im.style.cssText = v.style.cssText; v.replaceWith(im); });
+      c.style.left = (parseFloat(near.style.left) + (Math.random() - 0.5) * parseFloat(near.style.width) * 1.6) + "px";
+      c.style.top = (parseFloat(near.style.top) + (Math.random() - 0.5) * parseFloat(near.style.height) * 1.6) + "px";
+      c.style.pointerEvents = "none";
+      tile.appendChild(c); extras.push(c); fly(c, true);
+    }
+    const half = Math.ceil(extras.length / 2);
+    later(180, () => extras.slice(0, half).forEach((c) => c.remove()));
+    later(215, () => extras.slice(half).forEach((c) => c.remove()));
     later(600, () => showHeadline(false));
   }
 
