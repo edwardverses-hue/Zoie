@@ -14,7 +14,7 @@
 (() => {
   // EDIT: the headline lines.
   // one line, as on hakusuku.jp/recruit ("汗かいて、"); scraps: punctuation shares its glyph's scrap
-  const HEADLINE = [["生", "日", "快", "乐，"], ["宝", "贝！"]];   // two lines, like their "汗かいて、/心を動かす。"
+  const HEADLINE = [["生", "日", "快", "乐", "，"], ["宝", "贝", "！"]];   // two lines, like their "汗かいて、/心を動かす。"
 
   const body = document.body;
   const headline = document.getElementById("headline");
@@ -26,26 +26,46 @@
   // own white hand-cut scrap (corners chopped off at random, a few px uneven), scraps a bit
   // rotated and set up or down a little; all of them on one long cream strip (244,239,231)
   // that starts behind the first scrap and runs on past the last.
+  // Measured on their full-res frame (glyph ink = 1 unit): scraps cut with scissors, straight
+  // edges, 1-3 corners chopped off by 6-30% of a side; glyph margin 0.08-0.2; gaps between
+  // scraps 0-0.33 (cream strip shows through); glyphs sit 0-0.2 lower than each other;
+  // punctuation on its own small scrap, low, tucked over the previous scrap. No shadows.
+  // Strip: a straight-cut polygon (5-7 corners) starting ~0.6 into the first scrap, its top
+  // ~0.08 below the first scrap's top, bottom ~0.25 below the scraps, ending ~0.2 past the last.
+  const PUNCT = /[，！。、]/;
   const scrap = () => {
-    const c = (x, y, dx, dy) => rnd(0, 1) < 0.5
-      ? [`${x + dx * rnd(8, 20)}% ${y}%`, `${x}% ${y + dy * rnd(8, 20)}%`]       // chopped corner
-      : [`${x + dx * rnd(0, 4)}% ${y + dy * rnd(0, 4)}%`];
-    const tl = c(0, 0, 1, 1), tr = c(100, 0, -1, 1), br = c(100, 100, -1, -1), bl = c(0, 100, 1, -1);
-    return `polygon(${[...tl, ...tr.reverse(), ...br, ...bl.reverse()].join(",")})`;
+    // clockwise; each corner either chopped (two points) or a single slightly-off point
+    const ch = () => rnd(0, 1) < 0.55, A = () => rnd(6, 30), J = () => rnd(0, 3);
+    const p = [];
+    if (ch()) p.push([0, A()], [A(), 0]); else p.push([J(), J()]);
+    if (ch()) p.push([100 - A(), 0], [100, A()]); else p.push([100 - J(), J()]);
+    if (ch()) p.push([100, 100 - A()], [100 - A(), 100]); else p.push([100 - J(), 100 - J()]);
+    if (ch()) p.push([A(), 100], [0, 100 - A()]); else p.push([J(), 100 - J()]);
+    return `polygon(${p.map(([x, y]) => `${x.toFixed(1)}% ${y.toFixed(1)}%`).join(",")})`;
+  };
+  const stripCut = () => {
+    const p = [[0, rnd(0, 8)], [rnd(40, 60), rnd(0, 3)], [rnd(96, 99), rnd(0, 6)], [100, rnd(30, 65)],
+               [rnd(93, 98), 100], [rnd(30, 60), rnd(95, 100)], [rnd(0, 3), rnd(88, 100)]];
+    return `polygon(${p.map(([x, y]) => `${x.toFixed(1)}% ${y.toFixed(1)}%`).join(",")})`;
   };
   const lines = HEADLINE.map((groups, li) => {
     const strip = document.createElement("div");
     strip.className = "hl-line";
     const paper = document.createElement("i");
     paper.className = "hl-strip";
-    const j = () => rnd(0, 4).toFixed(1);
-    paper.style.clipPath = `polygon(0% ${j()}%, 100% ${j()}%, ${100 - rnd(0, 2)}% ${100 - j()}%, ${rnd(0, 3)}% 100%)`;
+    paper.style.clipPath = stripCut();
     strip.appendChild(paper);
-    const chars = groups.map((g) => {
+    const chars = groups.map((g, gi) => {
       const s = document.createElement("span");
-      s.textContent = g;
+      const punct = PUNCT.test(g);
+      if (punct) { s.classList.add("hl-p"); s.dataset.g = g; const b = document.createElement("b"); b.textContent = g; s.appendChild(b); }
+      else s.textContent = g;
       s.style.clipPath = scrap();
-      s.dataset.rest = `translateY(${rnd(-0.06, 0.12).toFixed(2)}em) rotate(${rnd(-4, 4).toFixed(1)}deg)`;
+      const pad = () => rnd(0.07, 0.2).toFixed(2) + "em";
+      if (!punct) s.style.padding = `${pad()} ${pad()} ${pad()} ${pad()}`;
+      if (gi && !punct) s.style.marginLeft = rnd(0, 0.3).toFixed(2) + "em";
+      const dy = punct ? (g === "！" ? rnd(0.18, 0.26) : rnd(0.78, 0.86)) : rnd(0, 0.2);
+      s.dataset.rest = `translateY(${dy.toFixed(2)}em) rotate(${rnd(-2.5, 2.5).toFixed(1)}deg)`;
       s.style.transform = s.dataset.rest;
       strip.appendChild(s);
       return s;
