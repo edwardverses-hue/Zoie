@@ -121,7 +121,8 @@
       const c = document.createElement("div");
       c.className = "ix";
       // straight, centred; a hair off-centre so the older ones peek out unevenly
-      const ox = rnd(-0.03, 0.03) * w, oy = rnd(-0.03, 0.03) * h;
+      // the first card is the photo that just rose out of the bag (box.js): exactly centred
+      const ox = n ? rnd(-0.03, 0.03) * w : 0, oy = n ? rnd(-0.03, 0.03) * h : 0;
       Object.assign(c.style, { width: w + "px", height: h + "px", transform: `translate(${-w / 2 + ox}px, ${-h / 2 + oy}px)` });
       c.appendChild(p.im.parentNode ? p.im.cloneNode() : p.im);   // the decoded image itself: no re-decode, no blank frame
       stage.appendChild(c); cards.push(c);
@@ -180,7 +181,15 @@
     later(6 * F + 200, () => showHeadline(false));
   }
 
-  window.Intro = { play };
+  // box.js asks for the pile's first photo and its card size, so the photo it lifts out of
+  // the bag lands exactly on the pile's first card (same image, same place, same size)
+  function firstCard() {
+    const p = pilePool.find((q) => q.ok);
+    if (!p) return null;
+    const L = LONG(PUSH[0]) * Math.max(innerWidth, innerHeight);
+    return { src: p.src, w: p.ar >= 1 ? L : L * p.ar, h: p.ar >= 1 ? L / p.ar : L };
+  }
+  window.Intro = { play, firstCard };
 
   // first load: only when opening on the gallery
   if (location.hash === "#birthday") { showHeadline(true); return; }

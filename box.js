@@ -18,6 +18,8 @@ const TONGUE = 0.30;       // tuck tongue
 const DUST = 0.36;         // dust flap depth
 const BW = W * 0.8, BH = 1.72, BAG_Y0 = 0.05;   // inner bag
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// testing only: ?slowmo=5 plays the box 5x slower so each step can be checked frame by frame
+const SLOW = Math.max(1, +(new URLSearchParams(location.search).get("slowmo") || 1));
 
 // ---------------------------------------------------------------- textures
 function raysTexture() {
@@ -266,42 +268,32 @@ function onUp() { down = null; }
 
 // ---------------------------------------------------------------- timeline
 const ease = (t) => 1 - Math.pow(1 - t, 3);
-// photos that fly out of the box: loaded while she unwraps it, so they're ready
-let preload = [];
-function preloadCards() {
-  const items = (window.GALLERY_MEDIA || []).filter((m) => m.thumb && !m.loop);
-  const loader = new THREE.TextureLoader();
-  preload = items.slice().sort(() => Math.random() - 0.5).slice(0, 14).map((m) => {
-    const t = loader.load(m.thumb, (tx) => { if (renderer) renderer.initTexture(tx); });   // GPU upload now, not mid-burst
-    t.colorSpace = THREE.SRGBColorSpace; return t;
-  });
-}
-
-function photoBurst() {
-  if (state.cards) return;
-  const ready = preload.filter((t) => t.image && t.image.width);
-  state.cards = ready.map((t, i) => {
-    const pick = ready;
-    const card = new THREE.Group(); card.scale.set(t.image.width / t.image.height, 1, 1);
-    const back = new THREE.Mesh(new THREE.PlaneGeometry(1.08, 1.08), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    const ph = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: t }));
-    ph.position.z = 0.002; card.add(back, ph);
-    const holder = new THREE.Group(); holder.add(card);
-    holder.position.set(0, HB, 0); holder.scale.setScalar(0.001); holder.visible = false;
-    const a = (i / ready.length) * Math.PI * 2 + Math.random() * 0.4;
-    holder.userData = {
-      to: new THREE.Vector3(Math.cos(a) * (1.6 + Math.random() * 2.2), HB * 0.62 + Math.sin(a) * (1.2 + Math.random() * 1.4), 2.6 + Math.random() * 2.6),
-      spin: (Math.random() - 0.5) * 0.5, delay: i * 0.012, size: 1.1 + Math.random() * 0.7,
-    };
-    scene.add(holder);
-    return holder;
+const RISE = 0.62;              // seconds for the photo to rise to the middle
+function makeHero(st) {
+  const card = window.Intro && window.Intro.firstCard && window.Intro.firstCard();
+  if (!card) return;
+  new THREE.TextureLoader().load(card.src, (t) => {
+    if (!state || state !== st) return;
+    t.colorSpace = THREE.SRGBColorSpace; renderer.initTexture(t);
+    // white border as in the pile (#intro .ix: 4-5 px of white round the photo)
+    const g = new THREE.Group();
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }));
+    const bx = 9 / card.w, by = 9 / card.h;
+    const ph = new THREE.Mesh(new THREE.PlaneGeometry(1 - bx, 1 - by), new THREE.MeshBasicMaterial({ map: t, toneMapped: false }));
+    ph.position.set(-0.5 / card.w, 0.5 / card.h, 0.001);
+    g.add(back, ph); g.visible = false; g.renderOrder = 5;
+    back.material.depthTest = ph.material.depthTest = false;      // always over the box
+    scene.add(g);
+    st.hero = g; st.heroCard = card; st.textures.push(t);
+    st.heroFrom = new THREE.Vector3();
+    if (st.stage === "torn") { st.bag.getWorldPosition(st.heroFrom); st.heroFrom.y += BH * 0.42; }
   });
 }
 
 function frame(now) {
   raf = requestAnimationFrame(frame);
   if (!state) return;
-  const dt = Math.min(0.05, (now - (state.last || now)) / 1000); state.last = now;
+  const dt = Math.min(0.05, (now - (state.last || now)) / 1000) / SLOW; state.last = now;
   const st = state;
   st.idle += dt;
   // a slow turn so it reads as an object: front and right side, like the product shots
@@ -329,31 +321,43 @@ function frame(now) {
   st.bag.position.y = BAG_Y0 + BH / 2 + (st.stage === "bag" || st.stage === "torn" ? 0.08 : 0) + ease(B) * (HB + 0.05);
   st.bag.rotation.z = Math.sin(st.idle * 2.1) * 0.02 * B;
   frameCamera(Math.min(1, B * 1.1));
-  if (st.stage === "bag" && B > 0.97) { st.stage = "torn"; st.t0 = now; hint(""); st.strip.visible = true; }
+  if (st.stage === "bag" && B > 0.97) {
+    st.stage = "torn"; st.t0 = now; hint(""); st.strip.visible = true;
+    if (st.heroFrom) { st.bag.getWorldPosition(st.heroFrom); st.heroFrom.y += BH * 0.42; }
+  }
 
-  // 3. the top tears off, light comes out, the photos fly
+  // 3. the top tears off and one photo rises out of the bag, up to the middle of the
+  //    screen, landing exactly on the pile's first card (intro.js); the box drops away
+  //    under it. Then the page takes over: same photo, same place, same size.
   if (st.stage === "torn") {
-    const t = (now - st.t0) / 1000;
+    const t = (now - st.t0) / 1000 / SLOW;
     st.strip.position.x = t * 2.4; st.strip.position.y = BH / 2 - 0.065 + t * 1.4 - t * t * 3; st.strip.rotation.z = -t * 3;
     st.bf.scale.y = st.bb.scale.y = 0.93; st.bf.position.y = st.bb.position.y = -BH * 0.035;
-    const g = Math.min(1, t / 0.35);
+    const g = Math.min(1, t / 0.25) * Math.max(0, 1 - Math.max(0, t - 0.35) / 0.25);
     st.glow.intensity = g * 5; st.rays.material.opacity = 0.5 * g;
-    const sc = 0.4 + ease(g) * 2.2; st.rays.scale.set(sc, sc, 1); st.rays.material.rotation = t * 0.2;
-    if (!st.cards) photoBurst();
-    if (st.cards) {
-      const from = new THREE.Vector3(); st.bag.getWorldPosition(from); from.y += BH * 0.45;
-      st.cards.forEach((c) => {
-        c.visible = true;
-        const u = c.userData, ct = Math.min(1, Math.max(0, t - 0.12 - u.delay) / 0.75), e = ease(ct);
-        c.position.lerpVectors(from, u.to, e);
-        c.scale.setScalar(0.001 + e * u.size);
-        c.quaternion.copy(camera.quaternion); c.rotateZ(u.spin * (1 - e * 0.4));
-      });
-    }
-    if (t > 0.45 && !st.handed) { st.handed = true; finish(true); }
+    const sc = 0.4 + ease(Math.min(1, t / 0.3)) * 2.2; st.rays.scale.set(sc, sc, 1); st.rays.material.rotation = t * 0.2;
+    // the box (with the bag) falls away below
+    const dropT = Math.max(0, t - 0.18) / 0.5;
+    st.root.position.y = -Math.pow(Math.min(1, dropT), 2) * 5.5;
+    if (st.hero) {
+      const k = Math.min(1, Math.max(0, t - 0.06) / RISE), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      // target: in front of the camera, sized to the pile card in pixels
+      const D = 4, fov = (camera.fov * Math.PI) / 180, perPx = (2 * D * Math.tan(fov / 2)) / innerHeight;
+      const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+      const to = camera.position.clone().addScaledVector(dir, D);
+      const from = st.heroFrom;
+      st.hero.position.lerpVectors(from, to, e);
+      st.hero.position.y += Math.sin(Math.PI * e) * 0.5;                  // a little arc up out of the bag
+      st.hero.quaternion.copy(camera.quaternion); st.hero.rotateZ((1 - e) * 0.35);
+      const fw = st.heroCard.w * perPx, fh = st.heroCard.h * perPx;
+      const s0 = 0.35 + 0.65 * e;
+      st.hero.scale.set(fw * s0, fh * s0, 1);
+      st.hero.visible = true;
+      if (k >= 1 && !st.handed) { st.handed = true; finish(true); }
+    } else if (t > 0.45 && !st.handed) { st.handed = true; finish(true); }
   }
-  // build the photo cards once the bag is on its way, so the burst never stalls
-  if (st.stage === "bag" && B > 0.3 && !st.cards) { photoBurst(); st.cards.forEach((c) => (c.visible = true)); renderer.compile(scene, camera); st.cards.forEach((c) => (c.visible = false)); }
+  // load the hero photo once the bag is on its way, so the rise never stalls
+  if (st.stage === "bag" && B > 0.25 && !st.heroAsked) { st.heroAsked = true; makeHero(st); }
   renderer.render(scene, camera);
 }
 
@@ -364,10 +368,11 @@ function finish(fromOpen) {
   hint("");
   document.body.classList.remove("boxing");
   if (onDone) onDone(fromOpen);
-  canvas.classList.add("gone");
+  if (fromOpen) requestAnimationFrame(() => requestAnimationFrame(() => canvas.classList.add("gone")));
+  else canvas.classList.add("gone");
   setTimeout(() => {
     cancelAnimationFrame(raf); raf = 0;
-    if (state) { scene.remove(state.root); (state.cards || []).forEach((c) => scene.remove(c)); state.textures.forEach((t) => t.dispose()); }
+    if (state) { scene.remove(state.root); if (state.hero) scene.remove(state.hero); state.textures.forEach((t) => t.dispose()); }
     state = null;
     canvas.style.display = "none";
   }, fromOpen ? 650 : 50);
@@ -378,11 +383,11 @@ window.BlindBox = {
     onDone = done;
     // the box's writing uses the site's handwriting font: wait for it (max 2 s)
     try { await Promise.race([document.fonts.load('30px "Patrick Hand SC"'), new Promise((r) => setTimeout(r, 2000))]); } catch (_) {}
-    preloadCards();
     if (!renderer) setup();
     if (state) { scene.remove(state.root); state = null; }
     canvas.style.display = "block"; canvas.classList.remove("gone");
     const b = makeBox();
+    b.root.position.y = 0;
     state = Object.assign(b, { stage: "lid", idle: 0, lidT: 0, lidTarget: 0, bagT: 0, bagTarget: 0, done: false });
     resize();
     document.body.classList.add("boxing");
