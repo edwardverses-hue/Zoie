@@ -72,6 +72,73 @@
     });
     return { strip, chars, last: li === HEADLINE.length - 1 };
   });
+  // ---- "click me!" under the title, cut and pasted the same way (smaller), and a "back"
+  // on the keychain page. Clicking one: its letters get knocked about for a moment and a
+  // pen loop is drawn round it (circling the choice), then the page changes once the loop
+  // closes. Hover pre-draws the start of the loop.
+  const LOOP = "M84 9 C62 1.5 22 2 8 13 C-2 22 8 35 32 37.5 C58 40 92 37 97 25 C101 15 88 7 70 6.5";
+  function scrapButton(text, href, cls) {
+    const a = document.createElement("a");
+    a.href = href; a.className = "hl-line hl-btn " + cls;
+    const paper = document.createElement("i"); paper.className = "hl-strip"; paper.style.clipPath = stripCut();
+    a.appendChild(paper);
+    const chars = [];
+    text.split(" ").forEach((word, wi) => {
+      [...word].forEach((g, gi) => {
+        const s = document.createElement("span");
+        s.textContent = g;
+        s.style.clipPath = scrap();
+        const pad = () => rnd(0.08, 0.18).toFixed(2) + "em";
+        s.style.padding = `${pad()} ${pad()} ${pad()} ${pad()}`;
+        if (wi && !gi) s.style.marginLeft = "0.34em";
+        else if (gi) s.style.marginLeft = rnd(0, 0.16).toFixed(2) + "em";
+        s.dataset.rest = `translateY(${rnd(0, 0.16).toFixed(2)}em) rotate(${rnd(-3, 3).toFixed(1)}deg)`;
+        s.style.transform = s.dataset.rest;
+        a.appendChild(s); chars.push(s);
+      });
+    });
+    a.setAttribute("aria-label", text);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "ink"); svg.setAttribute("viewBox", "0 0 100 40");
+    svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("aria-hidden", "true");
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", LOOP); svg.appendChild(p); a.appendChild(svg);
+    let busy = false;
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (busy) return; busy = true;
+      measureInk(p);
+      a.classList.add("drawn");
+      chars.forEach((c, i) => setTimeout(() => {
+        c.style.transform = `translateY(${rnd(-0.14, 0.1).toFixed(2)}em) rotate(${rnd(-9, 9).toFixed(1)}deg)`;
+        setTimeout(() => { c.style.transform = c.dataset.rest; }, 170);
+      }, i * 28));
+      setTimeout(() => { location.hash = href; }, 640);
+      setTimeout(() => { a.classList.remove("drawn"); busy = false; }, 1400);
+    });
+    return { a, chars, path: p };
+  }
+  // the loop's stroke isn't scaled with the stretched SVG: measure its on-screen length
+  function measureInk(p) {
+    const m = p.ownerSVGElement.getScreenCTM(); if (!m) return;
+    const L = p.getTotalLength(); let len = 0, prev = null;
+    for (let i = 0; i <= 60; i++) {
+      const q = p.getPointAtLength((L * i) / 60), x = q.x * m.a + q.y * m.c, y = q.x * m.b + q.y * m.d;
+      if (prev) len += Math.hypot(x - prev[0], y - prev[1]);
+      prev = [x, y];
+    }
+    p.style.setProperty("--len", Math.ceil(len + 4));
+  }
+  const clickMe = scrapButton("click me!", "#birthday", "hl-go");
+  lines.push({ strip: clickMe.a, chars: clickMe.chars, last: false });
+  const back = scrapButton("back", "#gallery", "hl-back");
+  back.chars.forEach((c) => c.classList.add("in", "set"));
+  document.body.appendChild(back.a);
+  const remeasure = () => { measureInk(clickMe.path); measureInk(back.path); };
+  addEventListener("resize", remeasure);
+  addEventListener("hashchange", () => requestAnimationFrame(remeasure));
+  if (document.fonts) document.fonts.ready.then(remeasure);
+
   lines.forEach((l) => headline.appendChild(l.strip));
   const stamp = document.createElement("div");      // (no date under the title: the reference has none)
   const allChars = lines.flatMap((l) => l.chars);

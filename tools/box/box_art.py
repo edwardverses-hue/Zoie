@@ -36,7 +36,7 @@ def arc(d, cx, cy, w, sag, lw=3):
 
 def front():
     im = paper(FW, FH, 1); d = ImageDraw.Draw(im)
-    tracked(d, FW / 2, FH * 0.33, "Zoie", F("300-normal", 250), 120)
+    tracked(d, FW / 2, FH * 0.33, "zoie", F("300-normal", 250), 120)
     arc(d, FW / 2, FH * 0.40, FW * 0.62, 26)
     tracked(d, FW / 2, FH * 0.50, "11.17.2026", F("400-normal", 50), 22)
     # contents table
@@ -59,15 +59,15 @@ def vertical(im, x, y, txt, font, track, rot):
 
 def left():
     im = paper(FW, FH, 2); d = ImageDraw.Draw(im)
-    tracked(d, FW / 2, FH * 0.47, "For Zoie,", F("400-normal", 54), 10)
-    tracked(d, FW / 2, FH * 0.47 + 78, "from Edward.", F("400-normal", 54), 10)
+    tracked(d, FW / 2, FH * 0.47, "for zoie,", F("400-normal", 54), 10)
+    tracked(d, FW / 2, FH * 0.47 + 78, "from edward.", F("400-normal", 54), 10)
     vertical(im, FW * 0.92, FH * 0.18, "11.17.2026", F("400-normal", 34), 10, -90)
     return im
 
 def right():
     im = paper(FW, FH, 3); d = ImageDraw.Draw(im)
     x0 = FW * 0.12
-    tracked(d, x0, FH * 0.16, "Zoie", F("300-normal", 110), 52, anchor="l")
+    tracked(d, x0, FH * 0.16, "zoie", F("300-normal", 110), 52, anchor="l")
     body = F("400-normal", 40)
     lines = ["Inside is one", "sealed bag.", "",
              "What's in it stays", "hidden until the bag", "is torn open."]
@@ -100,7 +100,7 @@ def back():
 
 def top():
     im = paper(FW, FW, 5); d = ImageDraw.Draw(im)
-    tracked(d, FW / 2, FW * 0.42, "Zoie", F("300-normal", 120), 58)
+    tracked(d, FW / 2, FW * 0.42, "zoie", F("300-normal", 120), 58)
     arc(d, FW / 2, FW * 0.48, FW * 0.36, 14, 2)
     tracked(d, FW / 2, FW * 0.62, "open here", F("400-italic", 40), 10)
     return im
