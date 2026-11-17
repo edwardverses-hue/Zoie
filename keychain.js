@@ -30,20 +30,23 @@
   //  hover - the other charms spring to +/-30 deg (idle rotation keeps running on top,
   //          their idle drift goes to 0); the hovered charm keeps its idle sway and springs
   //          to its own small angle (hov). Spring fitted to the recorded curves.
-  // Hover poses, computed by tools/keychain/fan.py from each charm's opaque pixels around
-  // the ring point (angles: left-to-right order suki -24, photo -3, gwen +28, living wild +37).
+  // Hover poses, computed by tools/keychain/fan2.py by rotating each charm's actual pixels
+  // about the main ring's centre (left-to-right: suki, photo, gwen, living wild).
   // POSE[h][i] = rotation (deg, clockwise) of charm order i while charm h is hovered:
   // the hovered charm comes to the front; a middle one swings 60% of the way to hanging plumb,
-  // an end one swings 8 deg outward (pulled out to its side, making room); every
-  // other charm swings out away from it, far enough to clear its body by 8 deg where that
-  // stays under 40 deg (a keyring doesn't fling charms sideways), and a charm farther out
-  // always swings at least as far as the one inside it, so none ever crosses another.
+  // an end one swings 8 deg outward (making room); every other charm swings away from it by
+  // the smallest whole degree (min 10, max 50) at which its body no longer overlaps the
+  // hovered one at all, and a charm farther out swings at least as far as the one inside it.
   const POSE = [
-    [  8.0, -37.3, -44.3, -51.3],
-    [ 40.0,  -1.9, -34.3, -44.2],
-    [ 47.0,  40.0,  16.9, -23.0],
-    [ 45.8,  38.8,  31.8,  -8.0],
+    [  8.0, -29.0, -29.0, -29.0],
+    [ 35.0,  -1.3, -21.0, -30.0],
+    [ 33.0,  33.0,  13.6, -14.0],
+    [ 20.0,  20.0,  20.0,  -8.0],
   ];
+  // Main ring, measured on 00padlock.webp: centre in % of the square. Every charm turns about
+  // this centre (not about a point below the ring), so its loop slides round the ring's wire
+  // and keeps exactly the same hold on it in every pose, swing and sway: it can't come off.
+  const RING = { x: 50.375, y: 30.959 };
   const PERIOD = 3520, BOB = 4, REF = 720;
   const K = 95, D = 13.5;
 
@@ -52,11 +55,11 @@
     const wrap = document.createElement("div");
     wrap.className = "kc-layer" + (l.top ? " kc-top" : "");
     // each layer image is cropped to its charm; place it back where it sits on the
-    // shared square and keep the pivot on the ring point (50% / 40% of the square)
+    // shared square; charms turn about the main ring's centre
     const [bl, bt, bw, bh] = BOX[l.src.split("/").pop()];
     Object.assign(wrap.style, {
       left: bl + "%", top: bt + "%", width: bw + "%", height: bh + "%",
-      transformOrigin: `${((50 - bl) / bw) * 100}% ${((40 - bt) / bh) * 100}%`,
+      transformOrigin: `${((RING.x - bl) / bw) * 100}% ${((RING.y - bt) / bh) * 100}%`,
     });
     const img = new Image();
     img.src = l.src; img.alt = ""; img.draggable = false; img.decoding = "async";
@@ -158,8 +161,10 @@
         l.v += (K * (target - l.a) - D * l.v) * dt; l.a += l.v * dt;
         l.wv += (K * (wt - l.w) - D * l.wv) * dt; l.w += l.wv * dt;
       }
+      // every charm rides the ring as it bobs (y), and sways amp deg round the ring's centre
+      // (its loop sliding a little along the wire, the reference's sideways drift)
       const r = p * l.amp;
-      l.el.style.transform = `translateX(${-r * k * l.w}px) translateY(${y * l.w}px) rotate(${r + l.a}deg)`;
+      l.el.style.transform = `translateY(${y}px) rotate(${r + l.a}deg)`;
     }
     requestAnimationFrame(loop);
   })(t0);
